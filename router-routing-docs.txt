@@ -1,0 +1,181 @@
+Configuring Routes
+Routes are configured by rendering <Routes> and <Route> that couple URL segments to UI elements.
+
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router";
+import App from "./app";
+
+const root = document.getElementById("root");
+
+ReactDOM.createRoot(root).render(
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<App />} />
+    </Routes>
+  </BrowserRouter>,
+);
+Copy code to clipboard
+Here's a larger sample config:
+
+<Routes>
+  <Route index element={<Home />} />
+  <Route path="about" element={<About />} />
+
+  <Route element={<AuthLayout />}>
+    <Route path="login" element={<Login />} />
+    <Route path="register" element={<Register />} />
+  </Route>
+
+  <Route path="concerts">
+    <Route index element={<ConcertsHome />} />
+    <Route path=":city" element={<City />} />
+    <Route path="trending" element={<Trending />} />
+  </Route>
+</Routes>
+Copy code to clipboard
+Nested Routes
+Routes can be nested inside parent routes.
+
+<Routes>
+  <Route path="dashboard" element={<Dashboard />}>
+    <Route index element={<Home />} />
+    <Route path="settings" element={<Settings />} />
+  </Route>
+</Routes>
+Copy code to clipboard
+The path of the parent is automatically included in the child, so this config creates both "/dashboard" and "/dashboard/settings" URLs.
+
+Child routes are rendered through the <Outlet/> in the parent route.
+
+import { Outlet } from "react-router";
+
+export default function Dashboard() {
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      {/* will either be <Home/> or <Settings/> */}
+      <Outlet />
+    </div>
+  );
+}
+Copy code to clipboard
+Layout Routes
+Routes without a path create new nesting for their children, but they don't add any segments to the URL.
+
+<Routes>
+  <Route element={<MarketingLayout />}>
+    <Route index element={<MarketingHome />} />
+    <Route path="contact" element={<Contact />} />
+  </Route>
+
+  <Route path="projects">
+    <Route index element={<ProjectsHome />} />
+    <Route element={<ProjectsLayout />}>
+      <Route path=":pid" element={<Project />} />
+      <Route path=":pid/edit" element={<EditProject />} />
+    </Route>
+  </Route>
+</Routes>
+Copy code to clipboard
+Index Routes
+Index routes render into their parent's <Outlet/> at their parent's URL (like a default child route). They are configured with the index prop:
+
+<Routes>
+  <Route path="/" element={<Root />}>
+    {/* renders into the outlet in <Root> at "/" */}
+    <Route index element={<Home />} />
+
+    <Route path="dashboard" element={<Dashboard />}>
+      {/* renders into the outlet in <Dashboard> at "/dashboard" */}
+      <Route index element={<DashboardHome />} />
+      <Route path="settings" element={<Settings />} />
+    </Route>
+  </Route>
+</Routes>
+Copy code to clipboard
+Note that index routes can't have children. If you're expecting that behavior, you probably want a layout route.
+
+Route Prefixes
+A <Route path> without an element prop adds a path prefix to its child routes, without introducing a parent layout.
+
+<Route path="projects">
+  <Route index element={<ProjectsHome />} />
+  <Route element={<ProjectsLayout />}>
+    <Route path=":pid" element={<Project />} />
+    <Route path=":pid/edit" element={<EditProject />} />
+  </Route>
+</Route>
+Copy code to clipboard
+Dynamic Segments
+If a path segment starts with : then it becomes a "dynamic segment". When the route matches the URL, the dynamic segment will be parsed from the URL and provided as params to other router APIs like useParams.
+
+<Route path="teams/:teamId" element={<Team />} />
+Copy code to clipboard
+import { useParams } from "react-router";
+
+export default function Team() {
+  let params = useParams();
+  // params.teamId
+}
+Copy code to clipboard
+You can have multiple dynamic segments in one route path:
+
+<Route
+  path="/c/:categoryId/p/:productId"
+  element={<Product />}
+/>
+Copy code to clipboard
+import { useParams } from "react-router";
+
+export default function CategoryProduct() {
+  let { categoryId, productId } = useParams();
+  // ...
+}
+Copy code to clipboard
+You should ensure that all dynamic segments in a given path are unique. Otherwise, as the params object is populated - latter dynamic segment values will override earlier values.
+
+Optional Segments
+You can make a route segment optional by adding a ? to the end of the segment.
+
+<Route path=":lang?/categories" element={<Categories />} />
+Copy code to clipboard
+You can have optional static segments, too:
+
+<Route path="users/:userId/edit?" element={<User />} />
+Copy code to clipboard
+Splats
+Also known as "catchall" and "star" segments. If a route path pattern ends with /* then it will match any characters following the /, including other / characters.
+
+<Route path="files/*" element={<File />} />
+Copy code to clipboard
+let params = useParams();
+// params["*"] will contain the remaining URL after files/
+let filePath = params["*"];
+Copy code to clipboard
+You can destructure the *, you just have to assign it a new name. A common name is splat:
+
+let { "*": splat } = useParams();
+Copy code to clipboard
+Linking
+Link to routes from your UI with Link and NavLink
+
+import { NavLink, Link } from "react-router";
+
+function Header() {
+  return (
+    <nav>
+      {/* NavLink makes it easy to show active states */}
+      <NavLink
+        to="/"
+        className={({ isActive }) =>
+          isActive ? "active" : ""
+        }
+      >
+        Home
+      </NavLink>
+
+      <Link to="/concerts/salt-lake-city">Concerts</Link>
+    </nav>
+  );
+}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import logo from '../assets/images/kamaroto1.png';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 // --- Data untuk Kartu Layanan ---
 // Menggunakan URL ikon dari sumber eksternal
@@ -24,21 +25,8 @@ const Home = () => {
   };
 
   return (
+    <>
     <div className="bg-white text-gray-800 font-sans">
-      {/* ===== Navbar Section Start ===== */}
-      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-200">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <img src={logo} alt="KamarOTO Logo" className="h-10 w-auto" />
-          <nav className="hidden md:flex items-center space-x-8">
-            <a href="#" className="text-gray-600 hover:text-orange-600 transition-colors duration-300">Home</a>
-            <a href="#" className="text-gray-600 hover:text-orange-600 transition-colors duration-300">About Us</a>
-          </nav>
-          <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-            <img src="https://icongr.am/feather/user.svg?size=24&color=6b7280" alt="User Icon" className="w-6 h-6"/>
-          </button>
-        </div>
-      </header>
-
       {/* ===== Hero Section Start ===== */}
       <section className="relative h-[60vh] bg-cover bg-center text-white" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1553729459-efe14ef6055d?q=80&w=2070&auto=format&fit=crop')" }}>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
@@ -112,43 +100,9 @@ const Home = () => {
             </div>
         </section>
       </main>
-
-      {/* ===== Footer Section Start ===== */}
-      <footer className="bg-gray-900 text-white border-t-4 border-orange-500">
-        <div className="container mx-auto px-6 py-12">
-          <div className="grid md:grid-cols-3 gap-8">
-            <div>
-              <h4 className="text-xl font-bold mb-4">KamarOTO</h4>
-              <p className="text-gray-400">Solusi otomotif terpadu untuk segala kebutuhan kendaraan Anda.</p>
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Hubungi Kami</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li className="flex items-center space-x-2 hover:text-white transition-colors">
-                  <img src="https://icongr.am/feather/phone.svg?size=20&color=currentColor" alt="Phone"/>
-                  <span>0812-3456-7890</span>
-                </li>
-                <li className="flex items-center space-x-2 hover:text-white transition-colors">
-                  <img src="https://icongr.am/feather/mail.svg?size=20&color=currentColor" alt="Mail"/>
-                  <span>kontak@kamaroto.com</span>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Tautan</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Kebijakan Privasi</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Syarat & Ketentuan</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="mt-12 pt-8 border-t border-gray-800 text-center text-gray-500 text-sm">
-            <p>&copy; {new Date().getFullYear()} KamarOTO. Semua Hak Cipta Dilindungi.</p>
-          </div>
-        </div>
-      </footer>
     </div>
-  );
-};
+    </>
+  )
+}
 
 export default Home;

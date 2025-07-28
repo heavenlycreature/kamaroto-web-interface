@@ -1,0 +1,5 @@
+this project was build with react v.19 and react router v.7, you can read router-navigate-docs.txt & router-routing-docs.txt, those file i made specifically for you to use as a reference for using the React router
+todo:
+- refactor the navbar and footer based on src/pages/Home.jsx files so it would make code readable and functional.
+- analyze all the folder structure so you would placing all the component in the right place, remember be objective! just make the necessary component not every view served as component.
+- build a routing and navigate feature using react router so it will lead to the right page and be easily integrated into the API backend later.
