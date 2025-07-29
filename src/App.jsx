@@ -5,23 +5,31 @@ import About from './pages/About';
 import NotFound from './pages/NotFound';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import Register from './pages/auth/Register';
+import RegisterCaptain from './pages/auth/RegisterCaptain';
+import RegisterMitra from './pages/auth/RegisterMitra';
+import Login from './pages/auth/Login';
 
 function App() {
-  return (
-    <Router>
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
-  );
+	return (
+		<Router>
+			<div className="flex flex-col min-h-screen">
+				<Navbar />
+				<main className="flex-grow">
+					<Routes>
+						<Route path="/" element={<Home />} />
+						<Route path="/about" element={<About />} />
+						<Route path="/register" element={<Register />} />
+						<Route path="/register/captain" element={<RegisterCaptain />} />
+						<Route path="/register/mitra" element={<RegisterMitra />} />
+						<Route path="/login" element={<Login />} />
+						<Route path="*" element={<NotFound />} />
+					</Routes>
+				</main>
+				<Footer />
+			</div>
+		</Router>
+	);
 }
 
 export default App;
