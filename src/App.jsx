@@ -23,6 +23,7 @@ function App() {
 						<Route path="/register/captain" element={<RegisterCaptain />} />
 						<Route path="/register/mitra" element={<RegisterMitra />} />
 						<Route path="/login" element={<Login />} />
+						{/* <Route path="/captain/profiles" element={<RegistrasiSukses />} /> */}
 						<Route path="*" element={<NotFound />} />
 					</Routes>
 				</main>
