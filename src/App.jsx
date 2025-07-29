@@ -9,6 +9,7 @@ import Register from './pages/auth/Register';
 import RegisterCaptain from './pages/auth/RegisterCaptain';
 import RegisterMitra from './pages/auth/RegisterMitra';
 import Login from './pages/auth/Login';
+import CaptainProfile from './pages/captain/CaptainProfile';
 
 function App() {
 	return (
@@ -19,11 +20,14 @@ function App() {
 					<Routes>
 						<Route path="/" element={<Home />} />
 						<Route path="/about" element={<About />} />
+
 						<Route path="/register" element={<Register />} />
 						<Route path="/register/captain" element={<RegisterCaptain />} />
 						<Route path="/register/mitra" element={<RegisterMitra />} />
 						<Route path="/login" element={<Login />} />
-						{/* <Route path="/captain/profiles" element={<RegistrasiSukses />} /> */}
+
+						<Route path="/captain/profile" element={<CaptainProfile />} />
+
 						<Route path="*" element={<NotFound />} />
 					</Routes>
 				</main>
