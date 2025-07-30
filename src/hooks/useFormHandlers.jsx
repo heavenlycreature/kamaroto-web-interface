@@ -29,7 +29,7 @@ export const useFormHandlers = (initialFormData) => {
         const { name, value, type, checked } = e.target;
         
         // Logika untuk field numerik
-        const numericFields = { phone: 13, nik: 16 };
+        const numericFields = { phone: 13, nik: 16, pic_phone: 13, owner_phone: 13, owner_ktp: 16 };
         if (name in numericFields) {
             const numericValue = value.replace(/[^0-9]/g, '').slice(0, numericFields[name]);
             setFormData(prev => ({ ...prev, [name]: numericValue }));

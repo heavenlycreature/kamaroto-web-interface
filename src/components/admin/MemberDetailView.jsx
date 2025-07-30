@@ -69,7 +69,7 @@ const MemberDetailView = ({ member, type, onBack, onApprove, onReject, showAppro
                         <DetailRow label="Nama Pemilik" value={profile.owner_name} />
                         <DetailRow label="Jenis Usaha" value={profile.business_type} />
                         <DetailRow label="Nama Badan Usaha" value={profile.business_entity} />
-                        <DetailRow label="Alamat Usaha" value={`${profile.business_address_detail}, ${profile.business_address_village}, ${profile.business_address_subdistrict}, ${profile.business_address_city}, ${profile.business_address_province}`} />
+                        <DetailRow label="Alamat Usaha" value={`${profile.owner_address_detail}, ${profile.owner_address_village}, ${profile.owner_address_subdistrict}, ${profile.owner_address_city}, ${profile.owner_address_province}`} />
                     </dl>
                 )}
             </main>
