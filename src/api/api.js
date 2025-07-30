@@ -27,18 +27,22 @@ api.interceptors.response.use(
         return response;
     },
     (error) => {
-        // Cek jika error disebabkan oleh token yang tidak valid atau kedaluwarsa (401 atau 403)
-        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-            console.log("Token tidak valid atau kedaluwarsa. Logout otomatis.");
-            
-            // Hapus data dari localStorage
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            
-            // Arahkan ke halaman login dengan pesan
-            // Menggunakan window.location.href akan me-refresh total aplikasi & membersihkan semua state
-            window.location.href = '/login?sessionExpired=true';
-        }
+        
+        setTimeout(() => {
+            if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                console.log("Token tidak valid atau kedaluwarsa. Logout otomatis.");
+                
+                // Hapus data dari localStorage
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+
+                // Tunggu 300ms sebelum mengarahkan ulang
+                
+                // Arahkan ke halaman login dengan pesan
+                // Menggunakan window.location.href akan me-refresh total aplikasi & membersihkan semua state
+                window.location.href = '/login?sessionExpired=true';
+            }
+        }, 3000);// Cek jika error disebabkan oleh token yang tidak valid atau kedaluwarsa (401 atau 403)
         
         // Kembalikan error agar bisa ditangani oleh komponen jika itu bukan error otentikasi
         return Promise.reject(error);

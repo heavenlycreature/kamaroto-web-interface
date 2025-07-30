@@ -48,6 +48,7 @@ export const useFormHandlers = (initialFormData) => {
         formData,
         setFormData,
         birthDateParts,
+        setBirthDateParts,
         handleInputChange,
         handleBirthDateChange,
     };
