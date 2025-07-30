@@ -1,5 +1,3 @@
-// pages/auth/RegisterCaptain.jsx
-// Halaman ini telah diperbarui dengan validasi input yang lebih ketat dan kompleks.
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -16,45 +14,61 @@ const PasswordRequirement = ({ isValid, text }) => (
 );
 
 const RegisterCaptain = () => {
+    const navigate = useNavigate();
+
     // --- STATE MANAGEMENT ---
-    const [formData, setFormData] = useState({
-        name: "",
-        birth_place: "",
-        birth_date: "",
-        password: "",
-        phone: "",
-        job: "",
-        email: "",
-        marital_status: "",
-        education: "",
-        address_detail: "",
-        gender: "",
-        nik: "", // Menambahkan NIK
-        agreement: false,
+    // Definisikan nilai awal untuk state
+    const initialFormData = {
+        name: "", birth_place: "", birth_date: "", password: "", phone: "",
+        job: "", email: "", marital_status: "", education: "",
+        address_detail: "", gender: "", nik: "", agreement: false,
+    };
+    const initialBirthDateParts = { day: "", month: "", year: "" };
+    const initialSelectedAddress = { province: "", city: "", district: "", subdistrict: "" };
+
+    // 1. Inisialisasi state dari localStorage jika ada, jika tidak, gunakan nilai awal
+    const [formData, setFormData] = useState(() => {
+        const saved = localStorage.getItem('captainFormData');
+        return saved ? JSON.parse(saved) : initialFormData;
     });
+    const [birthDateParts, setBirthDateParts] = useState(() => {
+        const saved = localStorage.getItem('captainBirthDateParts');
+        return saved ? JSON.parse(saved) : initialBirthDateParts;
+    });
+    const [selectedAddress, setSelectedAddress] = useState(() => {
+        const saved = localStorage.getItem('captainSelectedAddress');
+        return saved ? JSON.parse(saved) : initialSelectedAddress;
+    });
+    
+    // State lainnya (tidak perlu disimpan)
     const [confirmPassword, setConfirmPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
-    const [passwordValidation, setPasswordValidation] = useState({
-        minLength: false,
-        hasUpper: false,
-        hasNumber: false,
-        hasSymbol: false,
-    });
-    const [birthDateParts, setBirthDateParts] = useState({ day: "", month: "", year: "" });
+    const [passwordValidation, setPasswordValidation] = useState({ minLength: false, hasUpper: false, hasNumber: false, hasSymbol: false });
     const [provinces, setProvinces] = useState([]);
     const [cities, setCities] = useState([]);
     const [districts, setDistricts] = useState([]);
     const [subdistricts, setSubdistricts] = useState([]);
-    const [selectedAddress, setSelectedAddress] = useState({ province: "", city: "", district: "", subdistrict: "" });
     const [selfieFile, setSelfieFile] = useState(null);
     const [selfiePreview, setSelfiePreview] = useState(null);
     const [coordinates, setCoordinates] = useState({ latitude: null, longitude: null });
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: "", text: "" });
     const [errorField, setErrorField] = useState(null);
-    const navigate = useNavigate();
 
     // --- LOGIC & API CALLS ---
+
+    // 2. Simpan perubahan state ke localStorage setiap kali ada update
+    useEffect(() => {
+        localStorage.setItem('captainFormData', JSON.stringify(formData));
+    }, [formData]);
+    useEffect(() => {
+        localStorage.setItem('captainBirthDateParts', JSON.stringify(birthDateParts));
+    }, [birthDateParts]);
+    useEffect(() => {
+        localStorage.setItem('captainSelectedAddress', JSON.stringify(selectedAddress));
+    }, [selectedAddress]);
+    
+    // ... sisa useEffect dan handler Anda tetap sama ...
     useEffect(() => {
         const { day, month, year } = birthDateParts;
         if (day && month && year) {
@@ -80,48 +94,24 @@ const RegisterCaptain = () => {
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
-
-        const numericFields = {
-            phone: 13,
-            nik: 16
-        };
-
+        const numericFields = { phone: 13, nik: 16 };
         if (name in numericFields) {
-            const numericValue = value.replace(/[^0-9]/g, '');
-            const truncatedValue = numericValue.slice(0, numericFields[name]);
-            setFormData(prev => ({ ...prev, [name]: truncatedValue }));
+            const numericValue = value.replace(/[^0-9]/g, '').slice(0, numericFields[name]);
+            setFormData(prev => ({ ...prev, [name]: numericValue }));
             return;
         }
-
         if (name === 'password') {
             validatePassword(value);
-            if (confirmPassword && value !== confirmPassword) {
-                setPasswordError('Konfirmasi password tidak cocok.');
-            } else {
-                setPasswordError('');
-            }
+            setPasswordError(confirmPassword && value !== confirmPassword ? 'Konfirmasi password tidak cocok.' : '');
         }
-
         setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
 
     const handleConfirmPasswordChange = (e) => {
         const { value } = e.target;
         setConfirmPassword(value);
-        if (formData.password && value !== formData.password) {
-            setPasswordError('Konfirmasi password tidak cocok.');
-        } else {
-            setPasswordError('');
-        }
+        setPasswordError(formData.password && value !== formData.password ? 'Konfirmasi password tidak cocok.' : '');
     };
-
-    // const handleBirthDateChange = (e) => {
-    //     const { name, value } = e.target;
-    //     const numericValue = value.replace(/[^0-9]/g, '');
-    //     const limits = { day: 2, month: 2, year: 4 };
-    //     const truncatedValue = numericValue.slice(0, limits[name]);
-    //     setBirthDateParts(prev => ({ ...prev, [name]: truncatedValue }));
-    // };
 
     const handleAddressChange = (e) => {
         const { name, value } = e.target;
@@ -145,43 +135,22 @@ const RegisterCaptain = () => {
         const { name, value } = e.target;
         const numericValue = value.replace(/[^0-9]/g, '');
         const limits = { day: 2, month: 2, year: 4 };
-        const truncatedValue = numericValue.slice(0, limits[name]);
-        setBirthDateParts(prev => ({ ...prev, [name]: truncatedValue}));
+        setBirthDateParts(prev => ({ ...prev, [name]: numericValue.slice(0, limits[name])}));
     };
-
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMessage({ type: "", text: "" });
         setErrorField(null);
 
-        // --- PERBAIKAN: Menambahkan validasi untuk tanggal lahir ---
+        // Validasi frontend
         const { day, month, year } = birthDateParts;
-        if (!day || !month || !year || year.length < 4) {
-            setMessage({ type: "error", text: "Tanggal lahir harus diisi lengkap (Tgl, Bln, Thn)." });
-            return;
-        }
-
-        if (Object.values(passwordValidation).some(v => !v)) {
-            setMessage({ type: "error", text: "Password belum memenuhi semua persyaratan." });
-            return;
-        }
-        if (formData.password !== confirmPassword) {
-            setMessage({ type: 'error', text: 'Password dan konfirmasi password tidak cocok.' });
-            return;
-        }
-        if (formData.nik.length !== 16) {
-            setMessage({ type: "error", text: "NIK harus terdiri dari 16 digit." });
-            return;
-        }
-        if (formData.phone.length < 12 || formData.phone.length > 13) {
-            setMessage({ type: "error", text: "Nomor HP harus terdiri dari 12 hingga 13 digit." });
-            return;
-        }
-        if (!formData.agreement) {
-            setMessage({ type: "error", text: "Anda harus menyetujui pernyataan." });
-            return;
-        }
+        if (!day || !month || !year || year.length < 4) { setMessage({ type: "error", text: "Tanggal lahir harus diisi lengkap." }); return; }
+        if (Object.values(passwordValidation).some(v => !v)) { setMessage({ type: "error", text: "Password belum memenuhi semua persyaratan." }); return; }
+        if (formData.password !== confirmPassword) { setMessage({ type: 'error', text: 'Password dan konfirmasi password tidak cocok.' }); return; }
+        if (formData.nik.length !== 16) { setMessage({ type: "error", text: "NIK harus terdiri dari 16 digit." }); return; }
+        if (formData.phone.length < 10 || formData.phone.length > 13) { setMessage({ type: "error", text: "Nomor HP harus terdiri dari 10 hingga 13 digit." }); return; }
+        if (!formData.agreement) { setMessage({ type: "error", text: "Anda harus menyetujui pernyataan." }); return; }
 
         setLoading(true);
         const submissionData = new FormData();
@@ -192,24 +161,19 @@ const RegisterCaptain = () => {
         submissionData.append('address_village', selectedAddress.subdistrict);
         submissionData.append("latitude", coordinates.latitude);
         submissionData.append("longitude", coordinates.longitude);
-        submissionData.append("selfie_url", selfieFile);
-
-        // --- UNTUK DEBUGGING (OPSIONAL) ---
-        // console.log("--- Data yang akan dikirim (setelah perbaikan key) ---");
-        // for (const pair of submissionData.entries()) {
-        // console.log(`${pair[0]}: `, pair[1]);
-        // }
-        // console.log("-----------------------------------------");
-        // // --- AKHIR DEBUGGING ---
+        submissionData.append("selfie_url", selfieFile); // Pastikan key ini benar
 
         try {
             await axios.post("/register/captain", submissionData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-            setMessage({
-                type: "success",
-                text: "Pendaftaran berhasil! Akun Anda akan ditinjau admin.",
-            });
+            setMessage({ type: "success", text: "Pendaftaran berhasil! Akun Anda akan ditinjau admin." });
+            
+            // 3. Hapus data dari localStorage setelah berhasil
+            localStorage.removeItem('captainFormData');
+            localStorage.removeItem('captainBirthDateParts');
+            localStorage.removeItem('captainSelectedAddress');
+
             setTimeout(() => navigate('/login'), 2000);
         } catch (error) {
             const errorMessage = error.response?.data?.message || "Terjadi kesalahan.";

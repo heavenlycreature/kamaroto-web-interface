@@ -281,7 +281,7 @@ const CaptainProfile = () => {
                                     <p className="text-sm text-gray-500">Perbarui data diri Anda di sini.</p>
                                 </div>
                                 {!isEditing && (
-                                    <button onClick={() => setIsEditing(true)} className="flex items-center space-x-2 px-4 py-2 bg-orange-100 text-orange-700 font-semibold rounded-lg hover:bg-orange-200 transition-colors text-sm">
+                                    <button onClick={() => setIsEditing(true)} className="flex items-center space-x-2 px-4 py-2 bg-orange-100 cursor-pointer text-orange-700 font-semibold rounded-lg hover:bg-orange-200 transition-colors text-sm">
                                         <EditIcon />
                                         <span>Edit</span>
                                     </button>
@@ -330,8 +330,8 @@ const CaptainProfile = () => {
                             </div>
                             {isEditing && (
                                 <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
-                                    <button onClick={handleCancelEdit} className="px-5 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors">Batal</button>
-                                    <button onClick={handleSaveChanges} disabled={loading} className="px-5 py-2 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 transition-colors disabled:bg-gray-400">
+                                    <button onClick={handleCancelEdit} className="px-5 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg cursor-pointer hover:bg-gray-300 transition-colors">Batal</button>
+                                    <button onClick={handleSaveChanges} disabled={loading} className="px-5 py-2 bg-orange-500 text-white cursor-pointer font-semibold rounded-lg shadow-md hover:bg-orange-600 transition-colors disabled:bg-gray-400">
                                         {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
                                     </button>
                                 </div>
