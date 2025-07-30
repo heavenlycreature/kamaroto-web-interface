@@ -61,8 +61,10 @@ const Login = () => {
             setTimeout(() => {
                 if (userRole === 'co') {
                     navigate('/captain/profile'); // Arahkan ke profil captain
-                } else if (userRole === 'mitra') {
+                } else if (userRole === "mitra") {
                     navigate('/mitra/profile'); // Arahkan ke profil mitra (jika ada)
+                } else if (userRole === "admin") {
+                    navigate('/admin/dashboard'); // Arahkan ke dashboard admin
                 } else {
                     navigate('/'); // Arahkan ke home untuk role lain
                 }

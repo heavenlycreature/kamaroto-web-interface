@@ -51,7 +51,31 @@ const Navbar = () => {
     const activeLinkStyle = { color: '#ea580c', fontWeight: '600' };
 
     // Tentukan path profil berdasarkan role
-    const profilePath = userRole === 'co' ? '/captain/profile' : '/mitra/profile';
+    let profilePath;
+    
+    // switch (userRole) {
+    //     case 'admin':
+    //         profilePath = '/admin/dashboard';
+    //         break;
+    //     case 'co':
+    //         profilePath = '/captain/profile'; 
+    //         break;
+    //     case 'mitra':
+    //         profilePath = '/mitra/profile'; 
+    //         break;
+    //     default:
+    //         profilePath = '/'; // Default path jika tidak ada role yang sesuai
+    //         break;
+    // }
+
+    if (userRole === 'mitra') {
+        profilePath = '/mitra/profile';
+    } else if (userRole === 'co') {
+        profilePath = '/captain/profile';
+    }
+    else {
+        profilePath = '/admin/dashboard';
+    }
 
     return (
         <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-200">
@@ -65,7 +89,7 @@ const Navbar = () => {
                 </nav>
                 
                 <div className="relative" ref={dropdownRef}>
-                    <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-colors">
                         <img src="https://icongr.am/feather/user.svg?size=24&color=6b7280" alt="User Icon" className="w-6 h-6" />
                     </button>
 
@@ -76,7 +100,7 @@ const Navbar = () => {
                                     <Link to={profilePath} onClick={() => setIsDropdownOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         Profil Saya
                                     </Link>
-                                    <button onClick={handleLogout} className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <button onClick={handleLogout} className="cursor-pointer w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         Logout
                                     </button>
                                 </>

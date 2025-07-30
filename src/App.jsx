@@ -10,6 +10,9 @@ import RegisterCaptain from './pages/auth/RegisterCaptain';
 import RegisterMitra from './pages/auth/RegisterMitra';
 import Login from './pages/auth/Login';
 import CaptainProfile from './pages/captain/CaptainProfile';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import MembershipPage from './pages/admin/MembershipPage';
+import ApprovalPage from './pages/admin/ApprovalPage';
 
 function App() {
 	return (
@@ -25,6 +28,10 @@ function App() {
 						<Route path="/register/captain" element={<RegisterCaptain />} />
 						<Route path="/register/mitra" element={<RegisterMitra />} />
 						<Route path="/login" element={<Login />} />
+
+						<Route path="/admin/dashboard" element={<AdminDashboard />} />
+						<Route path="/admin/membership" element={<MembershipPage />} />
+						<Route path="/admin/approval" element={<ApprovalPage />} />
 
 						<Route path="/captain/profile" element={<CaptainProfile />} />
 
