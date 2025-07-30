@@ -13,35 +13,36 @@ import CaptainProfile from './pages/captain/CaptainProfile';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import MembershipPage from './pages/admin/MembershipPage';
 import ApprovalPage from './pages/admin/ApprovalPage';
+import GuestRoute from './components/auth/GuestRoute';
 
 function App() {
-	return (
-		<Router>
-			<div className="flex flex-col min-h-screen">
-				<Navbar />
-				<main className="flex-grow">
-					<Routes>
-						<Route path="/" element={<Home />} />
-						<Route path="/about" element={<About />} />
+return (
+    <Router>
+        <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <main className="flex-grow">
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/about" element={<About />} />
 
-						<Route path="/register" element={<Register />} />
-						<Route path="/register/captain" element={<RegisterCaptain />} />
-						<Route path="/register/mitra" element={<RegisterMitra />} />
-						<Route path="/login" element={<Login />} />
+                    <Route path="/register" element={ <GuestRoute><Register /></GuestRoute> } />
+                    <Route path="/register/captain" element={ <GuestRoute><RegisterCaptain /></GuestRoute> } />
+                    <Route path="/register/mitra" element={ <GuestRoute><RegisterMitra /></GuestRoute> } />
+                    <Route path="/login" element={ <GuestRoute><Login /></GuestRoute> } />
 
-						<Route path="/admin/dashboard" element={<AdminDashboard />} />
-						<Route path="/admin/membership" element={<MembershipPage />} />
-						<Route path="/admin/approval" element={<ApprovalPage />} />
+                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                    <Route path="/admin/membership" element={<MembershipPage />} />
+                    <Route path="/admin/approval" element={<ApprovalPage />} />
 
-						<Route path="/captain/profile" element={<CaptainProfile />} />
+                    <Route path="/captain/profile" element={<CaptainProfile />} />
 
-						<Route path="*" element={<NotFound />} />
-					</Routes>
-				</main>
-				<Footer />
-			</div>
-		</Router>
-	);
+                    <Route path="*" element={<NotFound />} />
+                </Routes>
+            </main>
+            <Footer />
+        </div>
+    </Router>
+);
 }
 
 export default App;

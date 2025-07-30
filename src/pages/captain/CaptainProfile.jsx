@@ -3,8 +3,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import axios from 'axios';
-axios.defaults.baseURL = "http://localhost:3000";
+import api from '../../api/api';
+
 
 // --- Komponen Ikon (SVG Inline) ---
 const ProfileIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>;
@@ -127,7 +127,7 @@ const CaptainProfile = () => {
                 const token = localStorage.getItem('token');
                 if (!token) throw new Error("Sesi tidak valid. Silakan login kembali.");
 
-                const response = await axios.get('/captain/profile', {
+                const response = await api.get('/captain/profile', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
@@ -167,10 +167,10 @@ const CaptainProfile = () => {
         fetchProfile();
     }, []);
     
-    useEffect(() => { axios.get('/address').then(res => setProvinces(res.data)) }, []);
-    useEffect(() => { if (selectedAddress.province) axios.get(`/address?province=${selectedAddress.province}`).then(res => setCities(res.data)) }, [selectedAddress.province]);
-    useEffect(() => { if (selectedAddress.city) axios.get(`/address?province=${selectedAddress.province}&city=${selectedAddress.city}`).then(res => setDistricts(res.data)) }, [selectedAddress.city]);
-    useEffect(() => { if (selectedAddress.district) axios.get(`/address?province=${selectedAddress.province}&city=${selectedAddress.city}&district=${selectedAddress.district}`).then(res => setSubdistricts(res.data)) }, [selectedAddress.district]);
+    useEffect(() => { api.get('/address').then(res => setProvinces(res.data)) }, []);
+    useEffect(() => { if (selectedAddress.province) api.get(`/address?province=${selectedAddress.province}`).then(res => setCities(res.data)) }, [selectedAddress.province]);
+    useEffect(() => { if (selectedAddress.city) api.get(`/address?province=${selectedAddress.province}&city=${selectedAddress.city}`).then(res => setDistricts(res.data)) }, [selectedAddress.city]);
+    useEffect(() => { if (selectedAddress.district) api.get(`/address?province=${selectedAddress.province}&city=${selectedAddress.city}&district=${selectedAddress.district}`).then(res => setSubdistricts(res.data)) }, [selectedAddress.district]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -205,7 +205,7 @@ const CaptainProfile = () => {
                 address_detail: userData.alamatDetail,
             };
 
-            await axios.put('/captain/profile/edit', payload, {
+            await api.put('/captain/profile/edit', payload, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -227,7 +227,7 @@ const CaptainProfile = () => {
         try {
             const token = localStorage.getItem('token');
             // Asumsi endpoint untuk ubah password adalah /api/profile/change-password
-            await axios.post('/api/profile/change-password', passwords, {
+            await api.post('/api/profile/change-password', passwords, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setSaveMessage({ type: 'success', text: 'Password berhasil diubah.' });

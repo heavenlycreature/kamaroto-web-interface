@@ -1,6 +1,3 @@
-// components/admin/ConfirmationModal.jsx
-// Komponen pop-up konfirmasi yang bisa digunakan kembali dengan warna tombol dinamis.
-
 import React from 'react';
 
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = "Konfirmasi", cancelText = "Batal", intent = 'danger' }) => {

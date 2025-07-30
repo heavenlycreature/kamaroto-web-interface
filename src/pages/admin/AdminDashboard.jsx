@@ -1,10 +1,6 @@
-// pages/admin/AdminDashboard.jsx
-// Halaman dashboard utama untuk admin, sekarang mengambil data statistik langsung dari backend.
-
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import axios from 'axios';
-axios.defaults.baseURL = "http://localhost:3000"; // Pastikan ini sesuai dengan URL backend Anda
+import api from '../../api/api';
 import AdminSidebar from '../../components/admin/AdminSidebar'; // Impor sidebar
 
 // --- Komponen Ikon (SVG Inline) ---
@@ -63,10 +59,10 @@ const AdminDashboard = () => {
 
                 // Ambil semua data secara paralel
                 const [captainsRes, mitrasRes, pendingCoRes, pendingMitraRes] = await Promise.all([
-                    axios.get(endpoints.captains, { headers }),
-                    axios.get(endpoints.mitras, { headers }),
-                    axios.get(endpoints.pendingCo, { headers }),
-                    axios.get(endpoints.pendingMitra, { headers }).catch(() => ({ data: { total: 0 } })) // Fallback jika endpoint belum ada
+                    api.get(endpoints.captains, { headers }),
+                    api.get(endpoints.mitras, { headers }),
+                    api.get(endpoints.pendingCo, { headers }),
+                    api.get(endpoints.pendingMitra, { headers }).catch(() => ({ data: { total: 0 } })) // Fallback jika endpoint belum ada
                 ]);
                 
                 // Jumlahkan total user yang menunggu persetujuan

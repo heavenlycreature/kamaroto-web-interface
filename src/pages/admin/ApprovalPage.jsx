@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api/api';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import MemberDetailView from '../../components/admin/MemberDetailView';
 import ConfirmationModal from '../../components/ConfirmationModal'; // Impor modal baru
@@ -48,7 +48,7 @@ const ApprovalPage = () => {
         const endpoint = activeTab === 'captain' ? '/admin/co/pending' : '/admin/mitra/pending';
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(endpoint, { headers: { 'Authorization': `Bearer ${token}` } });
+            const response = await api.get(endpoint, { headers: { 'Authorization': `Bearer ${token}` } });
             if (Array.isArray(response.data.data)) {
                 setPendingMembers(response.data.data);
             } else {
@@ -65,11 +65,11 @@ const ApprovalPage = () => {
     const performAction = async (userId, action) => {
         const userType = activeTab === 'captain' ? 'co' : 'mitra';
         const endpoint = `/admin/${userType}/${action}/${userId}`;
-        const actionText = action === 'approve' ? 'menyetujui' : 'menolak';
+        const actionText = action === 'approved' ? 'menyetujui' : 'menolak';
         
         try {
             const token = localStorage.getItem('token');
-            await axios.put(endpoint, {}, { headers: { 'Authorization': `Bearer ${token}` } });
+            await api.put(endpoint, {}, { headers: { 'Authorization': `Bearer ${token}` } });
             alert(`Pengguna berhasil di-${actionText}.`);
             fetchPendingMembers();
             handleBackToList();
@@ -82,13 +82,13 @@ const ApprovalPage = () => {
 
     // Fungsi untuk memicu/menampilkan modal konfirmasi
     const triggerConfirmation = (userId, action) => {
-        const actionText = action === 'approve' ? 'menyetujui' : 'menolak';
+        const actionText = action === 'approved' ? 'menyetujui' : 'menolak';
         setConfirmation({
             isOpen: true,
-            title: `Konfirmasi ${action === 'approve' ? 'Persetujuan' : 'Penolakan'}`,
+            title: `Konfirmasi ${action === 'approved' ? 'Persetujuan' : 'Penolakan'}`,
             message: `Apakah Anda yakin ingin ${actionText} anggota ini?`,
             onConfirm: () => performAction(userId, action),
-            intent: action === 'approve' ? 'success' : 'danger' // Menentukan warna tombol
+            intent: action === 'approved' ? 'success' : 'danger' // Menentukan warna tombol
         });
     };
 
@@ -176,8 +176,8 @@ const ApprovalPage = () => {
                                                                             <button onClick={() => handleDetailClick(member)} className="cursor-pointer font-semibold text-blue-600 hover:text-blue-800 px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 transition-colors">Review</button>
                                                                         </td>
                                                                         <td className="px-6 py-4 text-center space-x-2">
-                                                                            <button onClick={() => triggerConfirmation(member.id, 'approve')} className="cursor-pointer font-semibold text-green-600 px-3 py-1.5 rounded-lg bg-green-100 hover:bg-green-200 transition-colors">Approve</button>
-                                                                            <button onClick={() => triggerConfirmation(member.id, 'reject')} className="cursor-pointer font-semibold text-red-600 px-3 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 transition-colors">Reject</button>
+                                                                            <button onClick={() => triggerConfirmation(member.id, 'approved')} className="cursor-pointer font-semibold text-green-600 px-3 py-1.5 rounded-lg bg-green-100 hover:bg-green-200 transition-colors">Approve</button>
+                                                                            <button onClick={() => triggerConfirmation(member.id, 'rejected')} className="cursor-pointer font-semibold text-red-600 px-3 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 transition-colors">Reject</button>
                                                                         </td>
                                                                     </tr>
                                                                 ))}
@@ -194,8 +194,8 @@ const ApprovalPage = () => {
                                         member={selectedMember} 
                                         type={activeTab} 
                                         onBack={handleBackToList}
-                                        onApprove={() => triggerConfirmation(selectedMember.id, 'approve')}
-                                        onReject={() => triggerConfirmation(selectedMember.id, 'reject')}
+                                        onApproved={() => triggerConfirmation(selectedMember.id, 'approved')}
+                                        onReject={() => triggerConfirmation(selectedMember.id, 'rejected')}
                                         showApprovalActions={true}
                                     />
                                 )}

@@ -1,6 +1,3 @@
-// components/admin/MemberDetailView.jsx
-// Komponen ini telah diperbarui untuk menangani data yang tidak lengkap dari pengguna 'pending'.
-
 import React from 'react';
 
 // --- Komponen Ikon ---

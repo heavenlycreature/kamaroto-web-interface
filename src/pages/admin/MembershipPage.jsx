@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api/api';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import MemberDetailView from '../../components/admin/MemberDetailView';
 
@@ -42,7 +42,7 @@ const MembershipPage = () => {
         
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(endpoint, {
+            const response = await api.get(endpoint, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (Array.isArray(response.data.data)) {

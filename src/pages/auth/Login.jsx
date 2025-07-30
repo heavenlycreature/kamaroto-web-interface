@@ -1,9 +1,6 @@
-// pages/auth/Login.jsx
-// Halaman formulir untuk login pengguna, sekarang dengan logika fungsional.
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api/api';
 import logo from '../../assets/images/kamaroto1.png'; // Pastikan path logo ini benar
 
 // Komponen InputField bisa dipindahkan ke file terpisah jika digunakan di banyak tempat
@@ -48,7 +45,7 @@ const Login = () => {
         setMessage({ type: '', text: '' });
 
         try {
-            const response = await axios.post('/login', formData); // Endpoint sesuai backend Anda
+            const response = await api.post('/login', formData); // Endpoint sesuai backend Anda
 
             // Simpan token dan data user ke localStorage
             localStorage.setItem('token', response.data.token);

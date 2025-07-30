@@ -1,6 +1,3 @@
-// components/Navbar.jsx
-// Navbar ini sekarang dinamis, menampilkan menu berbeda berdasarkan status login.
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import logo from '../assets/images/kamaroto1.png';
@@ -53,28 +50,17 @@ const Navbar = () => {
     // Tentukan path profil berdasarkan role
     let profilePath;
     
-    // switch (userRole) {
-    //     case 'admin':
-    //         profilePath = '/admin/dashboard';
-    //         break;
-    //     case 'co':
-    //         profilePath = '/captain/profile'; 
-    //         break;
-    //     case 'mitra':
-    //         profilePath = '/mitra/profile'; 
-    //         break;
-    //     default:
-    //         profilePath = '/'; // Default path jika tidak ada role yang sesuai
-    //         break;
-    // }
+  
 
     if (userRole === 'mitra') {
         profilePath = '/mitra/profile';
     } else if (userRole === 'co') {
         profilePath = '/captain/profile';
     }
-    else {
+    else if (userRole === 'admin'){
         profilePath = '/admin/dashboard';
+    } else {
+        profilePath = '/';
     }
 
     return (
