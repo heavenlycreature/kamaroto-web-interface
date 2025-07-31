@@ -51,9 +51,9 @@ const AdminDashboard = () => {
                 // Definisikan endpoint Anda sesuai dengan adminRoutes.js
                 const endpoints = {
                     captains: '/admin/co/verified',
-                    mitras: '/admin/mitra/registered',
                     pendingCo: '/admin/co/pending',
                     // Asumsi Anda akan membuat endpoint ini untuk mitra pending
+                    mitras: '/admin/mitra/registered',
                     pendingMitra: '/admin/mitra/pending' 
                 };
 
