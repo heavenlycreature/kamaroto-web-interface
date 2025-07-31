@@ -14,6 +14,8 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import MembershipPage from './pages/admin/MembershipPage';
 import ApprovalPage from './pages/admin/ApprovalPage';
 import GuestRoute from './components/auth/GuestRoute';
+// import PendingApprovalPage from './pages/auth/PendingApprovalPage';
+import StatusPage from './pages/StatusPage';
 
 function App() {
 return (
@@ -29,10 +31,11 @@ return (
                     <Route path="/register/captain" element={ <GuestRoute><RegisterCaptain /></GuestRoute> } />
                     <Route path="/register/mitra" element={ <GuestRoute><RegisterMitra /></GuestRoute> } />
                     <Route path="/login" element={ <GuestRoute><Login /></GuestRoute> } />
+                    {/* <Route path="/rejected" element={ <PendingApprovalPage />}></Route> */}
 
                     <Route path="/admin/dashboard" element={<AdminDashboard />} />
                     <Route path="/admin/membership" element={<MembershipPage />} />
-                    <Route path="/admin/approval" element={<ApprovalPage />} />
+                    <Route path="/status" element={<StatusPage />} />
 
                     <Route path="/captain/profile" element={<CaptainProfile />} />
 

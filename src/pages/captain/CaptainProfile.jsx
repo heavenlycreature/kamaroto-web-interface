@@ -1,8 +1,8 @@
 // pages/captain/CaptainProfile.jsx
-// Halaman profil pengguna dengan sidebar yang telah dibuat responsif untuk mobile.
+// Halaman profil pengguna dengan alur lengkap untuk status rejected dan resubmit.
 
 import React, { useState, useEffect } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import api from '../../api/api';
 import { useFormHandlers } from '../../hooks/useFormHandlers'; 
 
@@ -15,20 +15,19 @@ const MenuIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height
 
 
 // --- Komponen Sidebar ---
-const Sidebar = ({ userName, userEmail, userAvatar, userStatus, isOpen, setIsOpen }) => {
-    // Logika untuk styling status
+const Sidebar = ({ userName, userEmail, userAvatar, isOpen, setIsOpen, userStatus }) => {
     const statusStyles = {
         approved: { text: 'Approved', classes: 'bg-green-500 text-white' },
         pending: { text: 'Pending', classes: 'bg-yellow-500 text-white' },
         rejected: { text: 'Rejected', classes: 'bg-red-500 text-white' },
-        active: { text: 'Approved', classes: 'bg-green-500 text-white' } // Mengganti 'active' menjadi 'Approved' di UI
+        active: { text: 'Approved', classes: 'bg-green-500 text-white' }
     };
     const statusInfo = statusStyles[userStatus] || { text: userStatus, classes: 'bg-gray-500 text-white' };
 
     return (
         <>
             <div 
-                className={`fixed inset-0 z-30 md:hidden transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                className={`fixed inset-0 bg-black bg-opacity-40 z-30 md:hidden transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                 onClick={() => setIsOpen(false)}
             ></div>
 
@@ -81,106 +80,56 @@ const ProfileField = ({ label, value, isEditing, onChange, name, type = "text" }
     </div>
 );
 
-// --- Komponen Modal Ubah Password ---
-const ChangePasswordModal = ({ isOpen, onClose, onSubmit }) => {
-    const [passwords, setPasswords] = useState({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-    });
-    const [error, setError] = useState('');
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setPasswords(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (passwords.newPassword !== passwords.confirmPassword) {
-            setError('Password baru tidak cocok.');
-            return;
-        }
-        setError('');
-        onSubmit(passwords);
-    };
-
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-                <h2 className="text-2xl font-bold mb-4">Ubah Password</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <input type="password" name="currentPassword" placeholder="Password Saat Ini" value={passwords.currentPassword} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
-                    <input type="password" name="newPassword" placeholder="Password Baru" value={passwords.newPassword} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
-                    <input type="password" name="confirmPassword" placeholder="Konfirmasi Password Baru" value={passwords.confirmPassword} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
-                    {error && <p className="text-red-500 text-sm">{error}</p>}
-                    <div className="flex justify-end space-x-3 pt-4">
-                        <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 rounded-md">Batal</button>
-                        <button type="submit" className="px-4 py-2 bg-orange-500 text-white rounded-md">Simpan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-};
-
-
 const CaptainProfile = () => {
     const [isEditing, setIsEditing] = useState(false);
-    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State untuk sidebar mobile
     const [originalData, setOriginalData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [saveMessage, setSaveMessage] = useState({ type: '', text: '' });
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     
+    // State untuk status akun
+    const [accountStatus, setAccountStatus] = useState(null);
+    const [rejectionInfo, setRejectionInfo] = useState({ reason: '', canResubmit: false });
+
     const {
-        formData,
-        setFormData,
-        birthDateParts,
-        setBirthDateParts,
-        handleInputChange,
-        handleBirthDateChange,
+        formData, setFormData, birthDateParts, setBirthDateParts,
+        handleInputChange, handleBirthDateChange,
     } = useFormHandlers({
         name: "", birth_place: "", gender: "", phone: "", nik: "", email: "",
-        job: "", marital_status: "", education: "", avatar: "", birth_date: "",
+        job: "", marital_status: "", education: "", avatar: "", birth_date: "", status: ""
     });
 
     useEffect(() => {
         const fetchProfile = async () => {
             try {
                 const token = localStorage.getItem('token');
-                if (!token) throw new Error("Sesi tidak valid. Silakan login kembali.");
+                if (!token) throw new Error("Sesi tidak valid.");
 
-                const response = await api.get('/captain/profile', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const response = await api.get('/captain/profile', { headers: { 'Authorization': `Bearer ${token}` } });
                 
                 const user = response.data;
                 const profile = user.coProfile;
 
-                if (!profile) {
-                    throw new Error("Data profil Captain tidak ditemukan di dalam respons server.");
+                if (!profile) throw new Error("Data profil Captain tidak ditemukan.");
+
+                setAccountStatus(user.status);
+                if (user.status === 'rejected') {
+                    setRejectionInfo({
+                        reason: user.rejection_reason,
+                        canResubmit: user.resubmit_allowed
+                    });
                 }
 
                 const birthDate = new Date(profile.birth_date);
-                
                 const formattedData = {
-                    name: profile.name,
-                    email: user.email,
-                    phone: user.phone,
-                    birth_place: profile.birth_place || "",
-                    gender: profile.gender,
-                    job: profile.job,
-                    marital_status: profile.marital_status,
-                    education: profile.education,
-                    nik: profile.nik || "",
+                    name: profile.name, email: user.email, phone: user.phone,
+                    birth_place: profile.birth_place || "", gender: profile.gender,
+                    job: profile.job, marital_status: profile.marital_status,
+                    education: profile.education, nik: profile.nik || "",
                     status: user.status,
                     avatar: profile.selfie_url ? `http://localhost:3000${profile.selfie_url}` : "https://placehold.co/96x96/ffffff/ea580c?text=User"
                 };
-
                 const initialBirthDateParts = {
                     day: String(birthDate.getDate()).padStart(2, '0'),
                     month: String(birthDate.getMonth() + 1).padStart(2, '0'),
@@ -191,7 +140,7 @@ const CaptainProfile = () => {
                 setBirthDateParts(initialBirthDateParts);
                 setOriginalData({ ...formattedData, birthDateParts: initialBirthDateParts });
             } catch (err) {
-                setError(err.response?.data?.message || err.message || "Gagal memuat data profil.");
+                setError(err.response?.data?.message || err.message);
             } finally {
                 setLoading(false);
             }
@@ -199,7 +148,7 @@ const CaptainProfile = () => {
         fetchProfile();
     }, [setFormData, setBirthDateParts]);
 
-    const handleSaveChanges = async () => {
+    const handleSaveChanges = async (isResubmit = false) => {
         setLoading(true);
         setSaveMessage({ type: '', text: '' });
         try {
@@ -207,44 +156,23 @@ const CaptainProfile = () => {
             if (!token) throw new Error("Sesi Anda telah berakhir.");
 
             const payload = {
-                name: formData.name,
-                phone: formData.phone,
-                birth_place: formData.birth_place,
+                name: formData.name, phone: formData.phone, birth_place: formData.birth_place,
                 birth_date: `${birthDateParts.year}-${birthDateParts.month}-${birthDateParts.day}`,
-                gender: formData.gender,
-                job: formData.job,
-                marital_status: formData.marital_status,
-                education: formData.education,
-                nik: formData.nik,
+                gender: formData.gender, job: formData.job, marital_status: formData.marital_status,
+                education: formData.education, nik: formData.nik,
             };
 
-            await api.put('/captain/profile/edit', payload, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const endpoint = isResubmit ? '/resubmit' : '/captain/profile/edit';
+            await api.put(endpoint, payload, { headers: { 'Authorization': `Bearer ${token}` } });
 
             setOriginalData({ ...formData, birthDateParts });
             setIsEditing(false);
-            setSaveMessage({ type: 'success', text: 'Profil berhasil diperbarui!' });
+            const successMessage = isResubmit ? 'Data berhasil dikirim ulang! Akun Anda akan ditinjau kembali.' : 'Profil berhasil diperbarui!';
+            setSaveMessage({ type: 'success', text: successMessage });
+            if(isResubmit) setTimeout(() => window.location.reload(), 2000);
+
         } catch (err) {
             const errorMessage = err.response?.data?.message || "Gagal menyimpan perubahan.";
-            setSaveMessage({ type: 'error', text: errorMessage });
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handlePasswordChange = async (passwords) => {
-        setLoading(true);
-        setSaveMessage({ type: '', text: '' });
-        try {
-            const token = localStorage.getItem('token');
-            await api.post('/api/profile/change-password', passwords, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            setSaveMessage({ type: 'success', text: 'Password berhasil diubah.' });
-            setIsPasswordModalOpen(false);
-        } catch (err) {
-            const errorMessage = err.response?.data?.message || "Gagal mengubah password.";
             setSaveMessage({ type: 'error', text: errorMessage });
         } finally {
             setLoading(false);
@@ -260,126 +188,109 @@ const CaptainProfile = () => {
 
     if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
     if (error) return <div className="flex items-center justify-center min-h-screen text-red-500">{error}</div>;
-
-    return (
-        <>
-            <ChangePasswordModal 
-                isOpen={isPasswordModalOpen} 
-                onClose={() => setIsPasswordModalOpen(false)}
-                onSubmit={handlePasswordChange}
-            />
+    
+    // --- Tampilan untuk Akun yang Ditolak ---
+    if (accountStatus === 'rejected' && !isEditing) {
+        return (
             <div className="bg-slate-100 min-h-screen">
                 <div className="md:flex md:min-h-screen">
                     <Sidebar userName={formData.name} userEmail={formData.email} userAvatar={formData.avatar} userStatus={formData.status} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-                    
-                    <div className="flex-1 flex flex-col">
-                        <header className="bg-white/80 backdrop-blur-md p-4 flex items-center justify-between md:hidden sticky top-0 z-20 shadow-sm">
-                            <button onClick={() => setIsSidebarOpen(true)} className="text-slate-600"><MenuIcon /></button>
-                            <h1 className="text-xl font-bold text-orange-500">Profil Saya</h1>
-                            <div className="w-6"></div> {/* Spacer */}
-                        </header>
-
-                        <main className="flex-1 p-8 md:p-12">
-                            <div className="max-w-5xl mx-auto">
-                                <header className="hidden md:flex items-center justify-between mb-10">
-                                    <h1 className="text-4xl font-bold text-gray-900">Pengaturan Akun</h1>
-                                </header>
-                                
-                                {saveMessage.text && (
-                                    <div className={`mb-6 p-4 rounded-lg text-center ${saveMessage.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                        {saveMessage.text}
-                                    </div>
-                                )}
-
-                                <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                                    <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center">
-                                        <div>
-                                            <h2 className="text-xl font-semibold text-gray-800">Informasi Pribadi</h2>
-                                            <p className="text-sm text-gray-500">Perbarui data diri Anda di sini.</p>
-                                        </div>
-                                        {!isEditing && (
-                                            <button onClick={() => setIsEditing(true)} className="flex items-center space-x-2 px-4 py-2 bg-orange-100 cursor-pointer text-orange-700 font-semibold rounded-lg hover:bg-orange-200 transition-colors text-sm">
-                                                <EditIcon />
-                                                <span>Edit</span>
-                                            </button>
-                                        )}
-                                    </div>
-                                    <div className="px-6 py-5">
-                                        <dl className="divide-y divide-gray-200">
-                                            <ProfileField label="Nama Lengkap" name="name" value={formData.name} isEditing={isEditing} onChange={handleInputChange} />
-                                            <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5">
-                                                <dt className="text-sm font-medium text-gray-500">Tempat & Tanggal Lahir</dt>
-                                                <dd className="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
-                                                    {isEditing ? (
-                                                        <div className="grid grid-cols-4 gap-2">
-                                                            <input type="text" name="birth_place" value={formData.birth_place} onChange={handleInputChange} placeholder="Tempat" className="col-span-2 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500" />
-                                                            <input type="tel" name="day" value={birthDateParts.day} onChange={handleBirthDateChange} placeholder="Tgl" className="block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500" />
-                                                            <input type="tel" name="month" value={birthDateParts.month} onChange={handleBirthDateChange} placeholder="Bln" className="block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500" />
-                                                            <input type="tel" name="year" value={birthDateParts.year} onChange={handleBirthDateChange} placeholder="Thn" className="block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500" />
-                                                        </div>
-                                                    ) : (
-                                                        <span className="font-semibold">{`${formData.birth_place}, ${birthDateParts.day}/${birthDateParts.month}/${birthDateParts.year}`}</span>
-                                                    )}
-                                                </dd>
-                                            </div>
-                                            <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5">
-                                                <dt className="text-sm font-medium text-gray-500">Jenis Kelamin</dt>
-                                                <dd className="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
-                                                    {isEditing ? (
-                                                        <div className="flex items-center space-x-6">
-                                                            <label className="flex items-center space-x-2 cursor-pointer">
-                                                                <input type="radio" name="gender" value="pria" checked={formData.gender === 'pria'} onChange={handleInputChange} className="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500" />
-                                                                <span>Laki-laki</span>
-                                                            </label>
-                                                            <label className="flex items-center space-x-2 cursor-pointer">
-                                                                <input type="radio" name="gender" value="perempuan" checked={formData.gender === 'perempuan'} onChange={handleInputChange} className="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500" />
-                                                                <span>Perempuan</span>
-                                                            </label>
-                                                        </div>
-                                                    ) : (
-                                                        <span className="font-semibold">{formData.gender || '-'}</span>
-                                                    )}
-                                                </dd>
-                                            </div>
-                                            <ProfileField label="Nomor HP" name="phone" value={formData.phone} isEditing={isEditing} onChange={handleInputChange} />
-                                            <ProfileField label="Nomor KTP" name="nik" value={formData.nik} isEditing={isEditing} onChange={handleInputChange} />
-                                            <ProfileField label="Email" name="email" value={formData.email} isEditing={false} />
-                                        </dl>
-                                    </div>
-                                    {isEditing && (
-                                        <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
-                                            <button onClick={handleCancelEdit} className="px-5 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg cursor-pointer hover:bg-gray-300 transition-colors">Batal</button>
-                                            <button onClick={handleSaveChanges} disabled={loading} className="px-5 py-2 bg-orange-500 text-white cursor-pointer font-semibold rounded-lg shadow-md hover:bg-orange-600 transition-colors disabled:bg-gray-400">
-                                                {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
-                                            </button>
-                                        </div>
-                                    )}
+                    <main className="flex-1 p-8 md:p-12 flex items-center justify-center">
+                        <div className="max-w-2xl w-full bg-white p-8 rounded-lg shadow-md text-center">
+                            <h1 className="text-2xl font-bold text-red-600">Pendaftaran Anda Ditolak</h1>
+                            <p className="mt-4 text-gray-600">Alasan Penolakan:</p>
+                            <p className="mt-2 font-semibold text-gray-800 bg-red-50 p-3 rounded-md">{rejectionInfo.reason}</p>
+                            {rejectionInfo.canResubmit && (
+                                <div className="mt-6">
+                                    <p className="text-gray-600 mb-4">Anda diizinkan untuk memperbaiki dan mengirim ulang data Anda.</p>
+                                    <button onClick={() => setIsEditing(true)} className="px-6 py-2 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600">
+                                        Edit & Kirim Ulang Formulir
+                                    </button>
                                 </div>
-                                
-                                <div className="bg-white rounded-2xl shadow-lg overflow-hidden mt-8">
-                                    <div className="px-6 py-5 border-b border-gray-200">
-                                        <h2 className="text-xl font-semibold text-gray-800">Keamanan Akun</h2>
-                                        <p className="text-sm text-gray-500">Ubah password Anda secara berkala untuk menjaga keamanan.</p>
-                                    </div>
-                                    <div className="px-6 py-5">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                            <ProfileField label="Email" name="email" value={formData.email} isEditing={false} />
-                                            <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5">
-                                                <dt className="text-sm font-medium text-gray-500">Password</dt>
-                                                <dd className="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
-                                                    <button onClick={() => setIsPasswordModalOpen(true)} className="font-semibold text-orange-600 hover:underline">Ubah Password</button>
-                                                </dd>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </main>
-                    </div>
+                            )}
+                        </div>
+                    </main>
                 </div>
             </div>
-            </>
         );
-    };
+    }
+
+    return (
+        <div className="bg-slate-100 min-h-screen">
+            <div className="md:flex md:min-h-screen">
+                <Sidebar userName={formData.name} userEmail={formData.email} userAvatar={formData.avatar} userStatus={formData.status} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+                
+                <div className="flex-1 flex flex-col">
+                    <header className="bg-white/80 backdrop-blur-md p-4 flex items-center justify-between md:hidden sticky top-0 z-20 shadow-sm">
+                        <button onClick={() => setIsSidebarOpen(true)} className="text-slate-600"><MenuIcon /></button>
+                        <h1 className="text-xl font-bold text-orange-500">Profil Saya</h1>
+                        <div className="w-6"></div>
+                    </header>
+
+                    <main className="flex-1 p-8 md:p-12">
+                        <div className="max-w-5xl mx-auto">
+                            <header className="hidden md:flex items-center justify-between mb-10">
+                                <h1 className="text-4xl font-bold text-gray-900">Pengaturan Akun</h1>
+                            </header>
+                            
+                            {saveMessage.text && (
+                                <div className={`mb-6 p-4 rounded-lg text-center ${saveMessage.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                    {saveMessage.text}
+                                </div>
+                            )}
+
+                            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                                <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center">
+                                    <div>
+                                        <h2 className="text-xl font-semibold text-gray-800">Informasi Pribadi</h2>
+                                        <p className="text-sm text-gray-500">Perbarui data diri Anda di sini.</p>
+                                    </div>
+                                    {!isEditing && accountStatus !== 'pending' && (
+                                        <button onClick={() => setIsEditing(true)} className="flex items-center space-x-2 px-4 py-2 bg-orange-100 cursor-pointer text-orange-700 font-semibold rounded-lg hover:bg-orange-200 transition-colors text-sm">
+                                            <EditIcon />
+                                            <span>Edit</span>
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="px-6 py-5">
+                                    <dl className="divide-y divide-gray-200">
+                                        <ProfileField label="Nama Lengkap" name="name" value={formData.name} isEditing={isEditing} onChange={handleInputChange} />
+                                        <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5">
+                                            <dt className="text-sm font-medium text-gray-500">Tempat & Tanggal Lahir</dt>
+                                            <dd className="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                                {isEditing ? (
+                                                    <div className="grid grid-cols-4 gap-2">
+                                                        <input type="text" name="birth_place" value={formData.birth_place} onChange={handleInputChange} placeholder="Tempat" className="col-span-2 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500" />
+                                                        <input type="tel" name="day" value={birthDateParts.day} onChange={handleBirthDateChange} placeholder="Tgl" className="block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500" />
+                                                        <input type="tel" name="month" value={birthDateParts.month} onChange={handleBirthDateChange} placeholder="Bln" className="block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500" />
+                                                        <input type="tel" name="year" value={birthDateParts.year} onChange={handleBirthDateChange} placeholder="Thn" className="block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500" />
+                                                    </div>
+                                                ) : (
+                                                    <span className="font-semibold">{`${formData.birth_place}, ${birthDateParts.day}/${birthDateParts.month}/${birthDateParts.year}`}</span>
+                                                )}
+                                            </dd>
+                                        </div>
+                                        <ProfileField label="Jenis Kelamin" name="gender" value={formData.gender} isEditing={isEditing} onChange={handleInputChange} />
+                                        <ProfileField label="Nomor HP" name="phone" value={formData.phone} isEditing={isEditing} onChange={handleInputChange} />
+                                        <ProfileField label="Nomor KTP" name="nik" value={formData.nik} isEditing={isEditing} onChange={handleInputChange} />
+                                        <ProfileField label="Email" name="email" value={formData.email} isEditing={false} />
+                                    </dl>
+                                </div>
+                                {isEditing && (
+                                    <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
+                                        <button onClick={handleCancelEdit} className="px-5 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg cursor-pointer hover:bg-gray-300 transition-colors">Batal</button>
+                                        <button onClick={() => handleSaveChanges(accountStatus === 'rejected')} disabled={loading} className="px-5 py-2 bg-orange-500 text-white cursor-pointer font-semibold rounded-lg shadow-md hover:bg-orange-600 transition-colors disabled:bg-gray-400">
+                                            {loading ? 'Menyimpan...' : (accountStatus === 'rejected' ? 'Kirim Ulang' : 'Simpan Perubahan')}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export default CaptainProfile;

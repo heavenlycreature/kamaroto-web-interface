@@ -1,3 +1,6 @@
+// pages/auth/Login.jsx
+// Halaman formulir untuk login pengguna, dengan logika redirect yang telah diperbarui.
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../api/api';
@@ -6,22 +9,22 @@ import logo from '../../assets/images/kamaroto1.png'; // Pastikan path logo ini 
 // Komponen InputField bisa dipindahkan ke file terpisah jika digunakan di banyak tempat
 const InputField = ({ icon, label, id, type = 'text', placeholder, required = true, value, onChange }) => (
     <div>
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-        <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <img src={icon} alt="input icon" className="w-5 h-5 text-gray-400" />
-            </div>
-            <input
-                type={type}
-                id={id}
-                name={id}
-                value={value}
-                onChange={onChange}
-                placeholder={placeholder}
-                required={required}
-                className="block w-full pl-10 pr-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-            />
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <img src={icon} alt="input icon" className="w-5 h-5 text-gray-400" />
         </div>
+        <input
+          type={type}
+          id={id}
+          name={id}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          required={required}
+          className="block w-full pl-10 pr-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+        />
+      </div>
     </div>
 );
 
@@ -46,26 +49,31 @@ const Login = () => {
 
         try {
             const response = await api.post('/login', formData); // Endpoint sesuai backend Anda
-
+            
             // Simpan token dan data user ke localStorage
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
 
             setMessage({ type: 'success', text: 'Login berhasil! Mengarahkan...' });
 
-            // Arahkan berdasarkan role
-            const userRole = response.data.user.role;
+            // Arahkan berdasarkan role dan status
+            // const user = response.data.user;
+            const userRole = user.role.trim().toLowerCase();
+            const userStatus = user.status.trim().toLowerCase();
+
             setTimeout(() => {
-                if (userRole === 'co') {
-                    navigate('/captain/profile'); // Arahkan ke profil captain
-                } else if (userRole === "mitra") {
-                    navigate('/mitra/profile'); // Arahkan ke profil mitra (jika ada)
-                } else if (userRole === "admin") {
-                    navigate('/admin/dashboard'); // Arahkan ke dashboard admin
+                if (userStatus === 'rejected') {
+                    // Jika ditolak, arahkan ke halaman status khusus
+                    navigate('/status');
+                } else if (userStatus === 'approved' || userStatus === 'active') {
+                    if (userRole === 'admin') navigate('/admin/dashboard');
+                    else if (userRole === 'co') navigate('/captain/profile');
+                    else if (userRole === 'mitra') navigate('/mitra/profile');
+                    else navigate('/');
                 } else {
-                    navigate('/'); // Arahkan ke home untuk role lain
+                    navigate('/');
                 }
-                window.location.reload(); // Reload halaman untuk memperbarui status navbar
+                 window.location.reload();
             }, 1500);
 
         } catch (error) {
@@ -88,23 +96,23 @@ const Login = () => {
                     <h2 className="text-2xl font-bold text-gray-900">Selamat Datang Kembali</h2>
                     <p className="text-gray-500 mt-1">Silakan masuk ke akun Anda.</p>
                 </div>
-
+                
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <InputField
-                        icon="https://icongr.am/feather/mail.svg?size=20&color=9ca3af"
-                        label="Email"
-                        id="email"
-                        type="email"
+                    <InputField 
+                        icon="https://icongr.am/feather/mail.svg?size=20&color=9ca3af" 
+                        label="Email" 
+                        id="email" 
+                        type="email" 
                         placeholder="email@contoh.com"
                         value={formData.email}
                         onChange={handleInputChange}
                     />
                     <div>
-                        <InputField
-                            icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af"
-                            label="Password"
-                            id="password"
-                            type="password"
+                        <InputField 
+                            icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" 
+                            label="Password" 
+                            id="password" 
+                            type="password" 
                             placeholder="Masukkan password Anda"
                             value={formData.password}
                             onChange={handleInputChange}
