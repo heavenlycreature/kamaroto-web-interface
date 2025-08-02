@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../api/api';
 
 // 1. Impor semua hook kustom yang dibutuhkan
@@ -20,41 +20,106 @@ const PasswordRequirement = ({ isValid, text }) => (
 );
 
 
-const RegisterMitra = () => {
+const RegisterMitra = ({isResubmitMode = false}) => {
    const navigate = useNavigate();
-
+   const location = useLocation();
     // --- STATE MANAGEMENT DENGAN CUSTOM HOOKS ---
     const initialFormData = {
         pic_name: '', pic_phone: '', pic_email: '', pic_status: '',
         owner_name: '', owner_phone: '', owner_email: '', owner_ktp: '', owner_address_detail: '',
-        business_type: '', business_name: '', business_address_detail: '', business_entity: '', business_duration: '',
-        social_media_account: '', agreement: false, password: '' // Tambahkan password ke state
+        business_type: '', business_entity: '', business_name: '', business_address_detail: '', business_duration: '',
+        social_media_account: '', agreement: false, password: ''
     };
     const initialAddress = { province: '', city: '', district: '', subdistrict: '' };
 
-    // Gunakan useFormHandlers untuk state form utama
-    const { formData, setFormData, handleInputChange } = useFormHandlers(initialFormData);
-    
-    // Bungkus state yang perlu disimpan dengan usePersistentState
+    const { formData, setFormData, handleInputChange: genericHandleInputChange } = useFormHandlers(initialFormData);
     usePersistentState('mitraFormData', initialFormData, formData, setFormData);
     const [selectedOwnerAddress, setSelectedOwnerAddress] = usePersistentState('mitraOwnerAddress', initialAddress);
     const [selectedBusinessAddress, setSelectedBusinessAddress] = usePersistentState('mitraBusinessAddress', initialAddress);
     const [socialMediaPlatform, setSocialMediaPlatform] = usePersistentState('mitraSocialPlatform', '');
-
-    // Gunakan hook untuk validasi password
-    const {
-        passwordValidation, confirmPassword, passwordError, setPasswordError,
-        validatePasswordStrength, handleConfirmPasswordChange: handleConfirmPassChange
-    } = usePasswordValidation();
-
-    // Gunakan hook untuk dropdown alamat
+    const { passwordValidation, confirmPassword, passwordError, setPasswordError, validatePasswordStrength, handleConfirmPasswordChange: handleConfirmPassChange } = usePasswordValidation();
     const { addressOptions: ownerAddressOptions, handleAddressChange: handleOwnerAddressChange } = useAddressDropdown(selectedOwnerAddress, setSelectedOwnerAddress);
     const { addressOptions: businessAddressOptions, handleAddressChange: handleBusinessAddressChange } = useAddressDropdown(selectedBusinessAddress, setSelectedBusinessAddress);
-    
-    // State lain
     const [coordinates, setCoordinates] = useState({ latitude: null, longitude: null });
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+
+     useEffect(() => {
+        if (isResubmitMode) {
+            console.log("Mode pendaftaran ulang Mitra terdeteksi, mengambil data profil...");
+            
+            // Hapus draf dari localStorage agar tidak bentrok
+            localStorage.removeItem('mitraFormData');
+            localStorage.removeItem('mitraOwnerAddress');
+            localStorage.removeItem('mitraBusinessAddress');
+            localStorage.removeItem('mitraSocialPlatform');
+
+            const fetchMyProfile = async () => {
+                try {
+                    const response = await api.get(`/profile/me/${location.state.userId}`);
+                    const profileData = response.data;
+                    const mitraProfile = profileData.mitraProfile;
+
+                    if (mitraProfile) {
+                        const businessTypeReverseMap = {
+                            'jual_beli_kendaraan': 'Jual Beli Kendaraan',
+                            'bengkel': 'Jasa Bengkel',
+                            'cuci_kendaraan': 'Jasa Cuci Kendaraan',
+                            'jual_beli_sparepart': 'Jual Beli Sparepart',
+                            'sewa_kendaraan': 'Jasa Sewa Kendaraan',
+                            'insurance_consultant': 'Insurance Consultant',
+                            'pembiayaan': 'Fasilitas Pembiayaan',
+                            'biro_jasa': 'Biro Jasa dan Sekolah Mengemudi',
+                        };
+
+                        // 2. Gunakan kamus untuk mendapatkan teks yang benar untuk UI
+                        const businessTypeForUI = businessTypeReverseMap[mitraProfile.business_type] || '';
+
+                        setFormData({
+                            ...formData, // Pertahankan field lain seperti password & agreement
+                            pic_name: mitraProfile.pic_name,
+                            pic_phone: mitraProfile.pic_phone,
+                            pic_email: mitraProfile.pic_email,
+                            pic_status: mitraProfile.pic_status,
+                            owner_name: mitraProfile.owner_name,
+                            owner_phone: mitraProfile.owner_phone,
+                            owner_email: mitraProfile.owner_email,
+                            owner_ktp: mitraProfile.owner_ktp,
+                            owner_address_detail: mitraProfile.owner_address_detail,
+                            business_type: businessTypeForUI,
+                            business_entity: mitraProfile.business_entity,
+                            business_name: mitraProfile.business_name || '',
+                            business_address_detail: mitraProfile.business_address_detail,
+                            business_duration: mitraProfile.business_duration,
+                            social_media_account: mitraProfile.social_media_account,
+                        });
+
+                        setSelectedOwnerAddress({
+                            province: mitraProfile.owner_address_province,
+                            city: mitraProfile.owner_address_city,
+                            district: mitraProfile.owner_address_subdistrict,
+                            subdistrict: mitraProfile.owner_address_village,
+                        });
+
+                        setSelectedBusinessAddress({
+                            province: mitraProfile.business_address_province,
+                            city: mitraProfile.business_address_city,
+                            district: mitraProfile.business_address_subdistrict,
+                            subdistrict: mitraProfile.business_address_village,
+                        });
+                        
+                        setSocialMediaPlatform(mitraProfile.social_media_platform);
+                    }
+                } catch (error) {
+                    console.error("Gagal memuat data untuk pendaftaran ulang Mitra:", error);
+                    setMessage({ type: 'error', text: 'Gagal memuat data Anda. Silakan coba lagi.' });
+                }
+            };
+            fetchMyProfile();
+        }
+    }, [isResubmitMode, setFormData, setSelectedOwnerAddress, setSelectedBusinessAddress, setSocialMediaPlatform]);
+
+
 
     useEffect(() => {
         if (selectedBusinessAddress.subdistrict) {
@@ -68,18 +133,21 @@ const RegisterMitra = () => {
         }
     }, [selectedBusinessAddress.subdistrict]);
 
-    // --- EVENT HANDLERS (ORKESTRASI HOOKS) ---
+    const handleInputChange = (e) => {
+        if (e.target.name === 'business_entity' && e.target.value === 'perorangan') {
+            setFormData(prev => ({ ...prev, business_name: '', business_entity: e.target.value }));
+            return;
+        }
+        genericHandleInputChange(e);
+    };
+
     const onInputChange = (e) => {
         if (e.target.name === 'password') {
-            handleInputChange(e, validatePasswordStrength); // Kirim callback validasi
+            genericHandleInputChange(e, validatePasswordStrength);
             if (confirmPassword && e.target.value !== confirmPassword) {
                 setPasswordError('Konfirmasi password tidak cocok.');
-            } else {
-                setPasswordError('');
-            }
-        } else {
-            handleInputChange(e);
-        }
+            } else { setPasswordError(''); }
+        } else { handleInputChange(e); }
     };
 
     const onConfirmPasswordChange = (e) => {
@@ -90,13 +158,16 @@ const RegisterMitra = () => {
         e.preventDefault();
         setMessage({ type: '', text: '' });
 
-        // Validasi frontend
-        if (Object.values(passwordValidation).some(v => !v)) { setMessage({ type: "error", text: "Password belum memenuhi semua persyaratan." }); return; }
-        if (formData.password !== confirmPassword) { setMessage({ type: 'error', text: 'Password dan konfirmasi password tidak cocok.' }); return; }
+        // 4. Validasi password menjadi kondisional
+        if (!isResubmitMode) {
+            if (Object.values(passwordValidation).some(v => !v)) { setMessage({ type: "error", text: "Password belum memenuhi semua persyaratan." }); return; }
+            if (formData.password !== confirmPassword) { setMessage({ type: 'error', text: 'Password dan konfirmasi password tidak cocok.' }); return; }
+        }
         if (!formData.agreement) { setMessage({ type: 'error', text: 'Anda harus menyetujui pernyataan.' }); return; }
 
         setLoading(true);
-         const businessTypeMap = {
+
+        const businessTypeMap = {  
             'Jual Beli Kendaraan': 'jual_beli_kendaraan',
             'Jasa Bengkel': 'bengkel',
             'Jasa Cuci Kendaraan': 'cuci_kendaraan',
@@ -104,13 +175,13 @@ const RegisterMitra = () => {
             'Jasa Sewa Kendaraan': 'sewa_kendaraan',
             'Insurance Consultant': 'insurance_consultant',
             'Fasilitas Pembiayaan': 'pembiayaan',
-            'Biro Jasa dan Sekolah Mengemudi': 'biro_jasa',
+            'Biro Jasa dan Sekolah Mengemudi': 'biro_jasa', 
         };
 
-         const businessTypeForApi = businessTypeMap[formData.business_type] || '';
+        const businessTypeForApi = businessTypeMap[formData.business_type] || '';
 
-        // Susun data sesuai yang diharapkan backend
-        const submissionData = {
+
+        const submissionData = { 
             // Data untuk tabel User
             name: formData.pic_name,
             email: formData.owner_email,
@@ -130,13 +201,17 @@ const RegisterMitra = () => {
             social_media_platform: socialMediaPlatform,
             latitude: coordinates.latitude,
             longitude: coordinates.longitude,
-        };
+         };
+        
+        // 5. Tentukan endpoint dan metode secara dinamis
+        const endpoint = isResubmitMode ? '/resubmit' : '/register/mitra';
+        const method = isResubmitMode ? 'put' : 'post';
 
         try {
-            await api.post('/register/mitra', submissionData);
-            setMessage({ type: 'success', text: 'Pendaftaran berhasil! Akun Anda akan ditinjau admin.' });
+            await api[method](endpoint, submissionData);
+            const successMessage = isResubmitMode ? "Data berhasil dikirim ulang!" : "Pendaftaran berhasil!";
+            setMessage({ type: 'success', text: successMessage });
             
-            // Hapus data dari localStorage
             localStorage.removeItem('mitraFormData');
             localStorage.removeItem('mitraOwnerAddress');
             localStorage.removeItem('mitraBusinessAddress');
@@ -151,13 +226,14 @@ const RegisterMitra = () => {
     };
 
 
+
     return (
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 py-12 md:py-20">
             <div className="container mx-auto px-6">
                 <div className="max-w-4xl mx-auto bg-white p-8 md:p-12 rounded-2xl shadow-2xl">
                     <div className="text-center mb-10">
-                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Formulir Pendaftaran Mitra</h1>
-                        <p className="text-gray-600 mt-2">Bergabunglah sebagai Mitra KamarOTO dan kembangkan usaha Anda.</p>
+                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{isResubmitMode ? "Perbarui Pendaftaran Mitra" : "Formulir Pendaftaran Mitra"}</h1>
+                        <p className="text-gray-600 mt-2"> {isResubmitMode ? "Perbaiki data Anda dan kirim ulang untuk ditinjau." : "Bergabunglah sebagai Mitra KamarOTO dan kembangkan usaha Anda."}</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-10">
@@ -195,20 +271,25 @@ const RegisterMitra = () => {
                         <FormSection title="Data Pemilik Usaha & Akun Login">
                             <InputField icon="https://icongr.am/feather/user.svg?size=20&color=9ca3af" label="Nama Lengkap Pemilik" id="owner_name" name="owner_name" value={formData.owner_name} onChange={onInputChange} placeholder="Masukkan nama lengkap pemilik" />
                             <InputField icon="https://icongr.am/feather/mail.svg?size=20&color=9ca3af" label="Email Aktif Pemilik (untuk Login)" id="owner_email" name="owner_email" value={formData.owner_email} onChange={onInputChange} type="email" placeholder="email.pemilik@contoh.com" />
-                            
-                            <div>
-                                <InputField icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" label="Password Akun" id="password" name="password" type="password" value={formData.password} onChange={onInputChange} placeholder="Buat password Anda" />
-                                <div className="grid grid-cols-2 gap-x-4 mt-2 pl-2">
-                                    <PasswordRequirement isValid={passwordValidation.minLength} text="Min. 8 karakter" />
-                                    <PasswordRequirement isValid={passwordValidation.hasUpper} text="1 Huruf Kapital" />
-                                    <PasswordRequirement isValid={passwordValidation.hasNumber} text="1 Angka" />
-                                    <PasswordRequirement isValid={passwordValidation.hasSymbol} text="1 Simbol" />
-                                </div>
-                            </div>
-                             <div>
-                                <InputField icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" label="Konfirmasi Password" id="confirmPassword" type="password" value={confirmPassword} onChange={onConfirmPasswordChange} placeholder="Ulangi password Anda" hasError={!!passwordError} />
-                                {passwordError && <p className="text-red-500 text-xs mt-1 ml-1">{passwordError}</p>}
-                            </div>
+     
+                            {!isResubmitMode && (
+                                <>
+                                    <div>
+                                        <InputField icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" label="Password Akun" id="password" name="password" type="password" value={formData.password} onChange={onInputChangeWithPassword} placeholder="Buat password Anda" required={!isResubmitMode} />
+                                        <div className="grid grid-cols-2 gap-x-4 mt-2 pl-2">
+                                            <PasswordRequirement isValid={passwordValidation.minLength} text="Min. 8 karakter" />
+                                            <PasswordRequirement isValid={passwordValidation.hasUpper} text="1 Huruf Kapital" />
+                                            <PasswordRequirement isValid={passwordValidation.hasNumber} text="1 Angka" />
+                                            <PasswordRequirement isValid={passwordValidation.hasSymbol} text="1 Simbol" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <InputField icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" label="Konfirmasi Password" id="confirmPassword" type="password" value={confirmPassword} onChange={onConfirmPasswordChange} placeholder="Ulangi password Anda" hasError={!!passwordError} required={!isResubmitMode} />
+                                        {passwordError && <p className="text-red-500 text-xs mt-1 ml-1">{passwordError}</p>}
+                                    </div>
+                                </>
+                            )}
+
 
                             <InputField icon="https://icongr.am/feather/smartphone.svg?size=20&color=9ca3af" label="Nomor HP / WA Pemilik" id="owner_phone" name="owner_phone" type="tel" value={formData.owner_phone} onChange={onInputChange} placeholder="081234567890" />
                             <InputField icon="https://icongr.am/feather/file-text.svg?size=20&color=9ca3af" label="No. KTP Pemilik" id="owner_ktp" name="owner_ktp" type="tel" value={formData.owner_ktp} onChange={onInputChange} placeholder="Masukkan 16 digit nomor KTP" />
@@ -308,7 +389,7 @@ const RegisterMitra = () => {
                         <div className="text-center pt-6">
                             {message.text && ( <div className={`mb-4 p-4 rounded-lg text-center ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{message.text}</div> )}
                             <button type="submit" disabled={loading} className="w-full md:w-1/2 px-12 py-4 text-center font-semibold text-white bg-orange-500 rounded-lg shadow-lg hover:bg-orange-600 disabled:bg-gray-400">
-                                {loading ? 'Mengirim...' : 'KIRIM PENDAFTARAN'}
+                                 {loading ? 'Mengirim...' : (isResubmitMode ? 'KIRIM ULANG PENDAFTARAN' : 'KIRIM PENDAFTARAN')}
                             </button>
                         </div>
                     </form>
