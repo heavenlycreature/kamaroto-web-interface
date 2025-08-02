@@ -42,48 +42,59 @@ const Login = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setMessage({ type: '', text: '' });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage({ type: '', text: '' });
 
-        try {
-            const response = await api.post('/login', formData); // Endpoint sesuai backend Anda
-            
-            // Simpan token dan data user ke localStorage
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('user', JSON.stringify(response.data.user));
+    try {
+        const response = await api.post('/login', formData);
+        
+        // Simpan token dan data user ke localStorage
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
 
-            setMessage({ type: 'success', text: 'Login berhasil! Mengarahkan...' });
+        setMessage({ type: 'success', text: 'Login berhasil! Mengarahkan...' });
 
-            // Arahkan berdasarkan role dan status
-            // const user = response.data.user;
-            const userRole = user.role.trim().toLowerCase();
-            const userStatus = user.status.trim().toLowerCase();
+        // Tentukan halaman tujuan berdasarkan respons
+        const user = response.data.user;
+        let destination = '/'; // Halaman default
+        if (user.role === 'admin') destination = '/admin/dashboard';
+        else if (user.role === 'co') destination = '/captain/profile';
+        else if (user.role === 'mitra') destination = '/mitra/profile';
+        
+        // Arahkan setelah jeda singkat
+        setTimeout(() => {
+            navigate(destination);
+        }, 1000); // Jeda 1 detik
 
-            setTimeout(() => {
-                if (userStatus === 'rejected') {
-                    // Jika ditolak, arahkan ke halaman status khusus
-                    navigate('/status');
-                } else if (userStatus === 'approved' || userStatus === 'active') {
-                    if (userRole === 'admin') navigate('/admin/dashboard');
-                    else if (userRole === 'co') navigate('/captain/profile');
-                    else if (userRole === 'mitra') navigate('/mitra/profile');
-                    else navigate('/');
-                } else {
-                    navigate('/');
-                }
-                 window.location.reload();
-            }, 1500);
+    } catch (error) {
+        const userData = error.response?.data?.user;
+        const userStatus = error.response?.data?.user?.status;
+        // Deklarasikan 'userToken' dari respons error
+        const userToken = error.response?.data?.token; 
 
-        } catch (error) {
-            const errorMessage = error.response?.data?.message || "Terjadi kesalahan. Silakan coba lagi.";
-            setMessage({ type: 'error', text: errorMessage });
-        } finally {
-            setLoading(false);
+        if (error.response?.status === 403 && (userStatus === 'rejected' || userStatus === 'pending')) {
+            const user = error.response.data.user;
+            if (userData?.status === 'rejected') {
+                if (userToken) {
+            localStorage.setItem('token', userToken); 
+            } else {
+                localStorage.removeItem('token'); // Hapus jika tidak ada token
+            }
+                localStorage.setItem('user', JSON.stringify(userData)); // Simpan SELURUH data user
+                navigate('/status');
+                return; // Hentikan eksekusi
+            }
         }
-    };
-
+            // Untuk semua error lainnya (password salah, dll)
+            const errorMessage = error.response?.data?.message || "Terjadi kesalahan.";
+            setMessage({ type: 'error', text: errorMessage });
+        
+    } finally {
+        setLoading(false);
+    }
+};
     return (
         <div className="relative flex items-center justify-center min-h-screen bg-gray-50 overflow-hidden">
             <div className="absolute inset-0 z-0 flex items-center justify-center">

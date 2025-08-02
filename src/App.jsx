@@ -1,51 +1,76 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+// Impor Komponen Utama & Halaman
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Home from './pages/Home';
 import About from './pages/About';
 import NotFound from './pages/NotFound';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+import StatusPage from './pages/StatusPage';
+
+// Impor Halaman Registrasi & Login
 import Register from './pages/auth/Register';
 import RegisterCaptain from './pages/auth/RegisterCaptain';
 import RegisterMitra from './pages/auth/RegisterMitra';
 import Login from './pages/auth/Login';
-import CaptainProfile from './pages/captain/CaptainProfile';
+
+// Impor Halaman Terproteksi
 import AdminDashboard from './pages/admin/AdminDashboard';
 import MembershipPage from './pages/admin/MembershipPage';
 import ApprovalPage from './pages/admin/ApprovalPage';
+import CaptainProfile from './pages/captain/CaptainProfile';
+
+// Impor Komponen Pelindung Rute
 import GuestRoute from './components/auth/GuestRoute';
-// import PendingApprovalPage from './pages/auth/PendingApprovalPage';
-import StatusPage from './pages/StatusPage';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
-return (
+  return (
     <Router>
-        <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-grow">
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/about" element={<About />} />
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow">
+          <Routes>
+            {/* --- Rute Publik --- */}
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
 
-                    <Route path="/register" element={ <GuestRoute><Register /></GuestRoute> } />
-                    <Route path="/register/captain" element={ <GuestRoute><RegisterCaptain /></GuestRoute> } />
-                    <Route path="/register/mitra" element={ <GuestRoute><RegisterMitra /></GuestRoute> } />
-                    <Route path="/login" element={ <GuestRoute><Login /></GuestRoute> } />
-                    {/* <Route path="/rejected" element={ <PendingApprovalPage />}></Route> */}
+            {/* --- Rute Khusus Tamu (Tidak Bisa Diakses Jika Sudah Login) --- */}
+            <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+            <Route path="/register/captain" element={<GuestRoute><RegisterCaptain /></GuestRoute>} />
+            <Route path="/register/mitra" element={<GuestRoute><RegisterMitra /></GuestRoute>} />
+            <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
 
-                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                    <Route path="/admin/membership" element={<MembershipPage />} />
-                    <Route path="/status" element={<StatusPage />} />
+            {/* --- Rute Terproteksi (Hanya Bisa Diakses Jika Sudah Login) --- */}
+            
+            {/* Rute Admin */}
+            <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
+            <Route path="/admin/approval" element={<ProtectedRoute><ApprovalPage /></ProtectedRoute>} />
+            
+            {/* Rute Pengguna */}
+            <Route path="/status" element={<ProtectedRoute><StatusPage /></ProtectedRoute>} />
+            <Route path="/captain/profile" element={<ProtectedRoute><CaptainProfile /></ProtectedRoute>} />
+            
+            {/* Rute Pendaftaran Ulang */}
+            <Route 
+              path="/captain/resubmit" 
+              element={<ProtectedRoute><RegisterCaptain isResubmitMode={true} /></ProtectedRoute>} 
+            />
+            <Route 
+              path="/mitra/resubmit" 
+              element={<ProtectedRoute><RegisterMitra isResubmitMode={true} /></ProtectedRoute>} 
+            />
 
-                    <Route path="/captain/profile" element={<CaptainProfile />} />
-
-                    <Route path="*" element={<NotFound />} />
-                </Routes>
-            </main>
-            <Footer />
-        </div>
+            {/* --- Rute Fallback --- */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
     </Router>
-);
+  );
 }
 
 export default App;

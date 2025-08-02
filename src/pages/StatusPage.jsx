@@ -22,9 +22,9 @@ const StatusPage = () => {
     const handleResubmit = () => {
         // Arahkan ke halaman pendaftaran yang sesuai dengan role
         if (userData.role === 'co') {
-            navigate('/register/captain', { state: { resubmitData: userData } });
+            navigate('/captain/resubmit', { state:  { userId: userData.id } });
         } else if (userData.role === 'mitra') {
-            navigate('/register/mitra', { state: { resubmitData: userData } });
+            navigate('/mitra/resubmit', { state:  { userId: userData.id } });
         }
     };
     

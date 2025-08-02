@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import api from '../../api/api';
 
 // Impor custom hook
@@ -19,9 +19,11 @@ const PasswordRequirement = ({ isValid, text }) => (
     </p>
 );
 
-const RegisterCaptain = () => {
+const RegisterCaptain = ({isResubmitMode = false}) => {
    const navigate = useNavigate();
-
+   const location = useLocation(); 
+   
+   
     // --- STATE MANAGEMENT DENGAN CUSTOM HOOKS ---
 
     const initialFormData = {
@@ -63,7 +65,7 @@ const RegisterCaptain = () => {
         addressOptions,
         handleAddressChange,
     } = useAddressDropdown(selectedAddress, setSelectedAddress);
-
+    
     // State lain yang tidak dikelola oleh hook
     const [selfieFile, setSelfieFile] = useState(null);
     const [selfiePreview, setSelfiePreview] = useState(null);
@@ -72,16 +74,81 @@ const RegisterCaptain = () => {
     const [message, setMessage] = useState({ type: "", text: "" });
     const [errorField, setErrorField] = useState(null);
 
+     useEffect(() => {
+        // Cek apakah ada state 'resubmitData' yang dikirim dari StatusPage
+        if (isResubmitMode && location.state?.userId) {
+             console.log("Mode pendaftaran ulang, mengambil data dari endpoint publik...");
+        
+            localStorage.removeItem('captainFormData');
+            localStorage.removeItem('captainBirthDateParts');
+            localStorage.removeItem('captainSelectedAddress');
+
+            const fetchMyProfile = async () => {
+                try {
+                    const response = await api.get(`/profile/me/${location.state.userId}`, {
+                        headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                    }
+                    }); // Panggil endpoint baru
+                    const profileData = response.data;
+
+                    // Isi state form dengan data yang diterima dari backend
+                    setFormData({
+                        name: profileData.name,
+                        email: profileData.email,
+                        phone: profileData.phone,
+                        nik: profileData.coProfile.nik,
+                        birth_place: profileData.coProfile.birth_place,
+                        job: profileData.coProfile.job,
+                        marital_status: profileData.coProfile.marital_status,
+                        education: profileData.coProfile.education,
+                        address_detail: profileData.coProfile.address_detail,
+                        gender: profileData.coProfile.gender,
+                        password: '', // Password dikosongkan untuk keamanan
+                        agreement: false,
+                    });
+                    
+                    // Isi state untuk alamat
+                    setSelectedAddress({
+                        province: profileData.coProfile.address_province,
+                        city: profileData.coProfile.address_city,
+                        district: profileData.coProfile.address_subdistrict,
+                        subdistrict: profileData.coProfile.address_village,
+                    });
+
+                    // Pecah tanggal lahir untuk diisi ke input terpisah
+                    if (profileData.coProfile.birth_date) {
+                        const date = new Date(profileData.coProfile.birth_date);
+                        setBirthDateParts({
+                            day: String(date.getDate()).padStart(2, '0'),
+                            month: String(date.getMonth() + 1).padStart(2, '0'),
+                            year: String(date.getFullYear()),
+                        });
+                    }
+                    if (profileData.coProfile?.selfie_url) {
+                    setSelfiePreview(`http://localhost:3000${profileData.coProfile.selfie_url}`);
+                }
+
+                } catch (error) {
+                    console.error("Gagal memuat data untuk pendaftaran ulang:", error);
+                }
+            };
+
+            fetchMyProfile();
+        }
+    }, [isResubmitMode, location.state]); // Efek ini hanya berjalan jika location.state berubah
+
+
     // --- LOGIC & API CALLS ---
     
     useEffect(() => {
-        if (selectedAddress.subdistrict) {
+        if (!isResubmitMode && selectedAddress.subdistrict) {
             const { province, city, district, subdistrict } = selectedAddress;
             api.get(`/address/coordinates?province=${province}&city=${city}&district=${district}&subdistrict=${subdistrict}`)
                .then((res) => setCoordinates(res.data))
                .catch(err => console.error("Error fetching coordinates:", err));
         }
-    }, [selectedAddress.subdistrict]);
+    }, [selectedAddress.subdistrict, isResubmitMode]);
 
     useEffect(() => {
         return () => { if (selfiePreview) URL.revokeObjectURL(selfiePreview); };
@@ -122,11 +189,18 @@ const RegisterCaptain = () => {
         setErrorField(null);
 
         // Validasi frontend
-        if (Object.values(passwordValidation).some(v => !v)) { setMessage({ type: "error", text: "Password belum memenuhi semua persyaratan." }); return; }
-        if (formData.password !== confirmPassword) { setMessage({ type: 'error', text: 'Password dan konfirmasi password tidak cocok.' }); return; }
-        // ... (validasi lain)
-
-        setLoading(true);
+       if (!isResubmitMode) {
+        if (Object.values(passwordValidation).some(v => !v)) {
+            setMessage({ type: "error", text: "Password belum memenuhi semua persyaratan." });
+            return;
+        }
+        if (formData.password !== confirmPassword) {
+            setMessage({ type: 'error', text: 'Password dan konfirmasi password tidak cocok.' });
+            return;
+        }
+    }
+    
+    setLoading(true);
         const submissionData = new FormData();
         Object.keys(formData).forEach((key) => submissionData.append(key, formData[key]));
         submissionData.append('address_province', selectedAddress.province);
@@ -135,13 +209,23 @@ const RegisterCaptain = () => {
         submissionData.append('address_village', selectedAddress.subdistrict);
         submissionData.append("latitude", coordinates.latitude);
         submissionData.append("longitude", coordinates.longitude);
-        submissionData.append("selfie_url", selfieFile);
+        if (selfieFile) {
+            submissionData.append("selfie_url", selfieFile);
+        }
+       
+        const endpoint = isResubmitMode ? '/resubmit' : '/register/captain';
+        const method = isResubmitMode ? 'put' : 'post';
 
         try {
-            await api.post("/register/captain", submissionData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
-            setMessage({ type: "success", text: "Pendaftaran berhasil! Akun Anda akan ditinjau admin." });
+            await api[method](endpoint, submissionData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+
+        const successMessage = isResubmitMode 
+            ? "Data berhasil dikirim ulang! Akun Anda akan ditinjau kembali."
+            : "Pendaftaran berhasil! Akun Anda akan ditinjau admin.";
+        
+        setMessage({ type: "success", text: successMessage });
             
             localStorage.removeItem('captainFormData');
             localStorage.removeItem('captainBirthDateParts');
@@ -171,19 +255,43 @@ const RegisterCaptain = () => {
                         <FormSection title="Data Diri">
                             <InputField icon="https://icongr.am/feather/user.svg?size=20&color=9ca3af" label="Nama Lengkap" id="name" value={formData.name} onChange={onInputChange} placeholder="Masukkan nama lengkap Anda" hasError={errorField === 'name'} />
                             <InputField icon="https://icongr.am/feather/mail.svg?size=20&color=9ca3af" label="Email Aktif" id="email" type="email" value={formData.email} onChange={onInputChange} hasError={errorField === 'email'} placeholder="email@contoh.com" />
-                            <div>
-                                <InputField icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" label="Password" id="password" type="password" value={formData.password} onChange={onInputChange} placeholder="Buat password Anda" hasError={errorField === 'password'} />
-                                <div className="grid grid-cols-2 gap-x-4 mt-2 pl-2">
-                                    <PasswordRequirement isValid={passwordValidation.minLength} text="Min. 8 karakter" />
-                                    <PasswordRequirement isValid={passwordValidation.hasUpper} text="1 Huruf Kapital" />
-                                    <PasswordRequirement isValid={passwordValidation.hasNumber} text="1 Angka" />
-                                    <PasswordRequirement isValid={passwordValidation.hasSymbol} text="1 Simbol" />
-                                </div>
-                            </div>
-                            <div>
-                                <InputField icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" label="Konfirmasi Password" id="confirmPassword" type="password" value={confirmPassword} onChange={onConfirmPasswordChange} placeholder="Ulangi password Anda" hasError={!!passwordError} />
-                                {passwordError && <p className="text-red-500 text-xs mt-1 ml-1">{passwordError}</p>}
-                            </div>
+                           {!isResubmitMode && (
+                                <>
+                                    <div>
+                                        <InputField 
+                                            icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" 
+                                            label="Password" 
+                                            id="password" 
+                                            type="password" 
+                                            value={formData.password} 
+                                            onChange={onInputChange} 
+                                            placeholder="Buat password Anda" 
+                                            hasError={errorField === 'password'} 
+                                            required={!isResubmitMode} // Hanya wajib jika BUKAN resubmit
+                                        />
+                                        <div className="grid grid-cols-2 gap-x-4 mt-2 pl-2">
+                                            <PasswordRequirement isValid={passwordValidation.minLength} text="Min. 8 karakter" />
+                                            <PasswordRequirement isValid={passwordValidation.hasUpper} text="1 Huruf Kapital" />
+                                            <PasswordRequirement isValid={passwordValidation.hasNumber} text="1 Angka" />
+                                            <PasswordRequirement isValid={passwordValidation.hasSymbol} text="1 Simbol" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <InputField 
+                                            icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" 
+                                            label="Konfirmasi Password" 
+                                            id="confirmPassword" 
+                                            type="password" 
+                                            value={confirmPassword} 
+                                            onChange={onConfirmPasswordChange} 
+                                            placeholder="Ulangi password Anda" 
+                                            hasError={!!passwordError} 
+                                            required={!isResubmitMode} // Hanya wajib jika BUKAN resubmit
+                                        />
+                                        {passwordError && <p className="text-red-500 text-xs mt-1 ml-1">{passwordError}</p>}
+                                    </div>
+                                </>
+                            )}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Tempat & Tanggal Lahir</label>
                                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -224,7 +332,7 @@ const RegisterCaptain = () => {
                         </FormSection>
 
                         <FormSection title="Dokumen & Foto">
-                            <ImageUpload onFileChange={handleFileChange} previewSrc={selfiePreview} />
+                            <ImageUpload onFileChange={handleFileChange} previewSrc={selfiePreview} isRequired={!isResubmitMode} />
                         </FormSection>
 
                         <FormSection title="Pernyataan">

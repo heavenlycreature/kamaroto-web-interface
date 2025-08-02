@@ -81,6 +81,7 @@ const ProfileField = ({ label, value, isEditing, onChange, name, type = "text" }
 );
 
 const CaptainProfile = () => {
+    const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [originalData, setOriginalData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -99,7 +100,12 @@ const CaptainProfile = () => {
         name: "", birth_place: "", gender: "", phone: "", nik: "", email: "",
         job: "", marital_status: "", education: "", avatar: "", birth_date: "", status: ""
     });
-
+    useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user?.status === 'rejected') {
+        navigate('/status'); // Redirect paksa jika mencoba akses langsung
+    }
+    }, [navigate]);
     useEffect(() => {
         const fetchProfile = async () => {
             try {
