@@ -32,8 +32,7 @@ const RegisterMitra = ({isResubmitMode = false}) => {
     };
     const initialAddress = { province: '', city: '', district: '', subdistrict: '' };
 
-    const { formData, setFormData, handleInputChange: genericHandleInputChange } = useFormHandlers(initialFormData);
-    usePersistentState('mitraFormData', initialFormData, formData, setFormData);
+    const { formData, setFormData, handleInputChange: genericHandleInputChange } = useFormHandlers(initialFormData, 'mitraFormData');
     const [selectedOwnerAddress, setSelectedOwnerAddress] = usePersistentState('mitraOwnerAddress', initialAddress);
     const [selectedBusinessAddress, setSelectedBusinessAddress] = usePersistentState('mitraBusinessAddress', initialAddress);
     const [socialMediaPlatform, setSocialMediaPlatform] = usePersistentState('mitraSocialPlatform', '');
@@ -275,7 +274,7 @@ const RegisterMitra = ({isResubmitMode = false}) => {
                             {!isResubmitMode && (
                                 <>
                                     <div>
-                                        <InputField icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" label="Password Akun" id="password" name="password" type="password" value={formData.password} onChange={onInputChangeWithPassword} placeholder="Buat password Anda" required={!isResubmitMode} />
+                                        <InputField icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" label="Password Akun" id="password" name="password" type="password" value={formData.password} onChange={onInputChange} placeholder="Buat password Anda" required={!isResubmitMode} />
                                         <div className="grid grid-cols-2 gap-x-4 mt-2 pl-2">
                                             <PasswordRequirement isValid={passwordValidation.minLength} text="Min. 8 karakter" />
                                             <PasswordRequirement isValid={passwordValidation.hasUpper} text="1 Huruf Kapital" />

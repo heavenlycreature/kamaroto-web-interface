@@ -1,10 +1,8 @@
-// pages/auth/Login.jsx
-// Halaman formulir untuk login pengguna, dengan logika redirect yang telah diperbarui.
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../api/api';
-import logo from '../../assets/images/kamaroto1.png'; // Pastikan path logo ini benar
+import logo from '../../assets/images/kamaroto1.png';
+import { useAuth } from '../../App';
 
 // Komponen InputField bisa dipindahkan ke file terpisah jika digunakan di banyak tempat
 const InputField = ({ icon, label, id, type = 'text', placeholder, required = true, value, onChange }) => (
@@ -29,6 +27,7 @@ const InputField = ({ icon, label, id, type = 'text', placeholder, required = tr
 );
 
 const Login = () => {
+    const { login } = useAuth(); // <-- Gunakan hook untuk mendapatkan fungsi login
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -51,8 +50,7 @@ const Login = () => {
         const response = await api.post('/login', formData);
         
         // Simpan token dan data user ke localStorage
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        login(response.data.token, response.data.user)
 
         setMessage({ type: 'success', text: 'Login berhasil! Mengarahkan...' });
 

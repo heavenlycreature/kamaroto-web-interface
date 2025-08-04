@@ -1,23 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import logo from '../assets/images/kamaroto1.png';
+import { useAuth } from '../App';
+
 
 const Navbar = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [userRole, setUserRole] = useState(null);
+    const { isLoggedIn, user, logout } = useAuth();
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
 
-    // Cek status login saat komponen dimuat
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (token && user) {
-            setIsLoggedIn(true);
-            setUserRole(user.role);
-        }
-    }, []);
 
     // Logika untuk menutup dropdown saat klik di luar
     useEffect(() => {
@@ -35,17 +27,13 @@ const Navbar = () => {
     }, [isDropdownOpen]);
 
     const handleLogout = () => {
-        // Hapus data dari localStorage
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setIsLoggedIn(false);
-        setUserRole(null);
+        logout();
         setIsDropdownOpen(false);
         navigate('/login'); // Arahkan ke halaman login
-        window.location.reload(); // Reload untuk memastikan semua state bersih
     };
 
     const activeLinkStyle = { color: '#ea580c', fontWeight: '600' };
+    const userRole = user?.role;
 
     // Tentukan path profil berdasarkan role
     let profilePath;

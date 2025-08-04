@@ -41,12 +41,9 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
         setBirthDateParts, // Ambil setter untuk digunakan oleh usePersistentState
         handleInputChange,
         handleBirthDateChange,
-    } = useFormHandlers(initialFormData);
+    } = useFormHandlers(initialFormData, 'captainFormData', 'captainBirthDateParts');
     
-    // Gunakan usePersistentState untuk menyimpan state dari useFormHandlers
-    usePersistentState('captainFormData', initialFormData, formData, setFormData);
-    usePersistentState('captainBirthDateParts', { day: "", month: "", year: "" }, birthDateParts, setBirthDateParts);
-    
+   
     // Gunakan usePersistentState untuk state alamat
     const [selectedAddress, setSelectedAddress] = usePersistentState('captainSelectedAddress', initialAddress);
 

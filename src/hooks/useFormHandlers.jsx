@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import usePersistentState from './usePersistentState';
 
-export const useFormHandlers = (initialFormData) => {
-    const [formData, setFormData] = useState(initialFormData);
-    const [birthDateParts, setBirthDateParts] = useState({ day: "", month: "", year: "" });
+export const useFormHandlers = (initialFormData, formDataKey, birtDatePartsKey) => {
+    const [formData, setFormData] = usePersistentState(formDataKey, initialFormData);
+    const [birthDateParts, setBirthDateParts] = usePersistentState(birtDatePartsKey, { day: "", month: "", year: "" });
 
     // Efek untuk menggabungkan tanggal lahir
     useEffect(() => {
