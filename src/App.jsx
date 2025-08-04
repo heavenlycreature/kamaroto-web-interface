@@ -24,6 +24,7 @@ import CaptainProfile from './pages/captain/CaptainProfile';
 // Impor Komponen Pelindung Rute
 import GuestRoute from './components/auth/GuestRoute';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import MitraProfile from './pages/mitra/MitraProfile';
 
 export const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
@@ -81,6 +82,8 @@ function App() {
             {/* Rute Pengguna */}
             <Route path="/status" element={<ProtectedRoute><StatusPage /></ProtectedRoute>} />
             <Route path="/captain/profile" element={<ProtectedRoute><CaptainProfile /></ProtectedRoute>} />
+
+            <Route path="/mitra/profile" element={<ProtectedRoute><MitraProfile /></ProtectedRoute>} />
             
             {/* Rute Pendaftaran Ulang */}
             <Route 
