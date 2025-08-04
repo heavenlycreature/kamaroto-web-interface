@@ -1,22 +1,28 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../App';
 
 const GuestRoute = ({ children }) => {
-    // Cek apakah ada token di localStorage
-    const {isLoggedIn, authLoading} = useAuth()
+    const { isLoggedIn, user } = useAuth();
+  const location = useLocation();
 
-     if (authLoading) {
-        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (isLoggedIn && user) {
+    if (user.status === 'pending' || user.status === 'rejected') {
+      return <Navigate to="/status" replace state={{ from: location }} />;
     }
 
-    // Jika user sudah login, alihkan ke halaman utama ('/')
-    if (isLoggedIn) {
-        return <Navigate to="/" replace />;
+    if (user.role === 'admin') {
+      return <Navigate to="/admin/dashboard" replace state={{ from: location }} />;
+    } else if (user.role === 'co') {
+      return <Navigate to="/captain/profile" replace state={{ from: location }} />;
+    } else if (user.role === 'mitra') {
+      return <Navigate to="/mitra/profile" replace state={{ from: location }} />;
     }
 
-    // Jika belum login, tampilkan halaman yang seharusnya (misalnya, halaman login/register)
-    return children;
+    return <Navigate to="/" replace state={{ from: location }} />;
+  }
+
+  return children;
 };
 
 export default GuestRoute;

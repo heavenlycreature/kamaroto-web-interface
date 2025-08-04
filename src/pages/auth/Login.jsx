@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../api/api';
 import logo from '../../assets/images/kamaroto1.png';
@@ -27,7 +27,7 @@ const InputField = ({ icon, label, id, type = 'text', placeholder, required = tr
 );
 
 const Login = () => {
-    const { login } = useAuth(); // <-- Gunakan hook untuk mendapatkan fungsi login
+    const { user, isLoggedIn, login } = useAuth(); // <-- Gunakan hook untuk mendapatkan fungsi login
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -41,54 +41,50 @@ const Login = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage({ type: '', text: '' });
+    const handleSubmit = async (e) => {
+            e.preventDefault();
+            setLoading(true);
+            setMessage({ type: '', text: '' });
 
-    try {
-        const response = await api.post('/login', formData);
-        
-        // Simpan token dan data user ke localStorage
-        login(response.data.token, response.data.user)
-        
-        setMessage({ type: 'success', text: 'Login berhasil! Mengarahkan...' });
-        
-        // Tentukan halaman tujuan berdasarkan respons
-        const user = response.data.user;
-        let destination = '/'; // Halaman default
-        if (user.role === 'admin') destination = '/admin/dashboard';
-        else if (user.role === 'co') destination = '/captain/profile';
-        else if (user.role === 'mitra') destination = '/mitra/profile';
-        
-        navigate(destination);
-    } catch (error) {
-        const userData = error.response?.data?.user;
-        const userStatus = error.response?.data?.user?.status;
-        // Deklarasikan 'userToken' dari respons error
-        const userToken = error.response?.data?.token; 
+            // Panggil fungsi login terpusat dari context
+            const result = await login(formData.email, formData.password);
 
-        if (error.response?.status === 403 && (userStatus === 'rejected' || userStatus === 'pending')) {
-            const user = error.response.data.user;
-            if (userData?.status === 'rejected') {
-                if (userToken) {
-            localStorage.setItem('token', userToken); 
-            } else {
-                localStorage.removeItem('token'); // Hapus jika tidak ada token
+            setLoading(false);
+
+            if (!result.success) {
+                const errorData = result.error;
+                const userStatus = errorData?.user?.status;
+
+                if (userStatus === 'rejected' || userStatus === 'pending') {
+                    // Simpan data user (tanpa token) dan arahkan ke status
+                    localStorage.removeItem('token');
+                    localStorage.setItem('user', JSON.stringify(errorData.user));
+                    navigate('/status');
+                } else {
+                    // Untuk error lain (password salah, dll.)
+                    setMessage({ type: 'error', text: errorData.message || 'Terjadi kesalahan.' });
+                }
             }
-                localStorage.setItem('user', JSON.stringify(userData)); // Simpan SELURUH data user
-                navigate('/status');
-                return; // Hentikan eksekusi
+        };
+        useEffect(() => {
+            if (isLoggedIn && user) {
+                const status = user.status;
+                const role = user.role;
+
+                if (status === 'pending' || status === 'rejected') {
+                    navigate('/status');
+                } else if (role === 'admin') {
+                    navigate('/admin/dashboard');
+                } else if (role === 'co') {
+                    navigate('/captain/profile');
+                } else if (role === 'mitra') {
+                    navigate('/mitra/profile');
+                } else {
+                    navigate('/');
+                }
             }
-        }
-            // Untuk semua error lainnya (password salah, dll)
-            const errorMessage = error.response?.data?.message || "Terjadi kesalahan.";
-            setMessage({ type: 'error', text: errorMessage });
-        
-    } finally {
-        setLoading(false);
-    }
-};
+        }, [isLoggedIn, user, navigate]);
+
     return (
         <div className="relative flex items-center justify-center min-h-screen bg-gray-50 overflow-hidden">
             <div className="absolute inset-0 z-0 flex items-center justify-center">

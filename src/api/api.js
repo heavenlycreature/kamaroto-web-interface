@@ -32,12 +32,12 @@ api.interceptors.response.use(
             // Cek apakah URL request BUKAN '/login'
             const isNotLoginPage = error.config.url !== '/login';
 
-             if (user?.status === 'rejected' && window.location.pathname.includes('/resubmit')) {
-                return Promise.reject(error); // Biarkan komponen menangani error
-            }
+            //  if (user?.status === 'rejected' && window.location.pathname.includes('/resubmit')) {
+            //     return Promise.reject(error); // Biarkan komponen menangani error
+            // }
 
             // HANYA jalankan logout otomatis jika KEDUA kondisi terpenuhi
-            if (isAuthError && isNotLoginPage && userData?.status !== 'rejected') {
+            if (isAuthError && isNotLoginPage && user?.status !== 'rejected') {
                 console.log("Token tidak valid atau sesi kedaluwarsa. Logout otomatis.");
                 
                 localStorage.removeItem('token');

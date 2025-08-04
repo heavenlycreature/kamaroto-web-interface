@@ -1,5 +1,6 @@
 import React, { useState, useEffect, createContext, useContext }  from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import api from './api/api';
 
 // Impor Komponen Utama & Halaman
 import Navbar from './components/Navbar';
@@ -51,10 +52,22 @@ function App() {
 
     }, []);
 
-    const login = (token, user) => {
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-        setAuth({ token, user, isLoggedIn: true });
+    const login = async (email, password) => {
+       try {
+            const response = await api.post('/login', { email, password });
+            const { token, user } = response.data;
+
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            setAuth({ token, user, isLoggedIn: true });
+
+            // Kembalikan data user jika berhasil
+            return { success: true, user };
+
+        } catch (error) {
+            // Jika error, kembalikan data error dari backend
+            return { success: false, error: error.response?.data };
+        }
     };
 
     const logout = () => {
@@ -66,7 +79,7 @@ function App() {
 
 
   return (
-    <AuthContext.Provider value={{ authContextValue }}>
+    <AuthContext.Provider value={ authContextValue }>
     <Router>
       <div className="flex flex-col min-h-screen">
         <Navbar />
@@ -77,10 +90,10 @@ function App() {
             <Route path="/about" element={<About />} />
 
             {/* --- Rute Khusus Tamu (Tidak Bisa Diakses Jika Sudah Login) --- */}
+            <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
             <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
             <Route path="/register/captain" element={<GuestRoute><RegisterCaptain /></GuestRoute>} />
             <Route path="/register/mitra" element={<GuestRoute><RegisterMitra /></GuestRoute>} />
-            <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
 
             {/* --- Rute Terproteksi (Hanya Bisa Diakses Jika Sudah Login) --- */}
             
