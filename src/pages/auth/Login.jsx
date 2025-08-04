@@ -51,9 +51,9 @@ const Login = () => {
         
         // Simpan token dan data user ke localStorage
         login(response.data.token, response.data.user)
-
+        
         setMessage({ type: 'success', text: 'Login berhasil! Mengarahkan...' });
-
+        
         // Tentukan halaman tujuan berdasarkan respons
         const user = response.data.user;
         let destination = '/'; // Halaman default
@@ -61,11 +61,7 @@ const Login = () => {
         else if (user.role === 'co') destination = '/captain/profile';
         else if (user.role === 'mitra') destination = '/mitra/profile';
         
-        // Arahkan setelah jeda singkat
-        setTimeout(() => {
-            navigate(destination);
-        }, 1000); // Jeda 1 detik
-
+        navigate(destination);
     } catch (error) {
         const userData = error.response?.data?.user;
         const userStatus = error.response?.data?.user?.status;

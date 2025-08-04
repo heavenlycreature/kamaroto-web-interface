@@ -28,7 +28,7 @@ const RegisterMitra = ({isResubmitMode = false}) => {
         pic_name: '', pic_phone: '', pic_email: '', pic_status: '',
         owner_name: '', owner_phone: '', owner_email: '', owner_ktp: '', owner_address_detail: '',
         business_type: '', business_entity: '', business_name: '', business_address_detail: '', business_duration: '',
-        social_media_account: '', agreement: false, password: ''
+        social_media_account: '', agreement: false, password: '', referral_code: ''
     };
     const initialAddress = { province: '', city: '', district: '', subdistrict: '' };
 
@@ -240,6 +240,16 @@ const RegisterMitra = ({isResubmitMode = false}) => {
                             <InputField icon="https://icongr.am/feather/user.svg?size=20&color=9ca3af" label="Nama Lengkap PIC" id="pic_name" name="pic_name" value={formData.pic_name} onChange={onInputChange} placeholder="Masukkan nama lengkap PIC" />
                             <InputField icon="https://icongr.am/feather/smartphone.svg?size=20&color=9ca3af" label="Nomor HP / WA PIC" id="pic_phone" name="pic_phone" type="tel" value={formData.pic_phone} onChange={onInputChange} placeholder="081234567890" />
                             <InputField icon="https://icongr.am/feather/mail.svg?size=20&color=9ca3af" label="Email Aktif PIC" id="pic_email" name="pic_email" value={formData.pic_email} onChange={onInputChange} type="email" placeholder="email.pic@contoh.com" />
+                            <InputField 
+                                icon="https://icongr.am/feather/gift.svg?size=20&color=9ca3af" 
+                                label="Kode Referral (Opsional)" 
+                                id="referral_code" 
+                                name="referral_code"
+                                value={formData.referral_code} 
+                                onChange={handleInputChange} 
+                                placeholder="Masukkan kode referral jika ada"
+                                required={false}
+                            />
                             <label className="block text-sm font-medium text-gray-700 mb-2">Status PIC</label>
                             <div className="flex items-center space-x-6 mb-4">
                             <label className="flex items-center space-x-2 cursor-pointer">

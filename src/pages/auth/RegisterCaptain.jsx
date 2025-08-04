@@ -29,7 +29,7 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
     const initialFormData = {
         name: "", birth_place: "", birth_date: "", password: "", phone: "",
         job: "", email: "", marital_status: "", education: "",
-        address_detail: "", gender: "", nik: "", agreement: false,
+        address_detail: "", gender: "", nik: "", agreement: false, referral_code: ''
     };
     const initialAddress = { province: "", city: "", district: "", subdistrict: "" };
 
@@ -250,6 +250,16 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
 
                     <form onSubmit={handleSubmit} className="space-y-10">
                         <FormSection title="Data Diri">
+                            <InputField 
+                                icon="https://icongr.am/feather/gift.svg?size=20&color=9ca3af" 
+                                label="Kode Referral (Opsional)" 
+                                id="referral_code" 
+                                name="referral_code"
+                                value={formData.referral_code} 
+                                onChange={handleInputChange} 
+                                placeholder="Masukkan kode referral jika ada"
+                                required={false}
+                            />
                             <InputField icon="https://icongr.am/feather/user.svg?size=20&color=9ca3af" label="Nama Lengkap" id="name" value={formData.name} onChange={onInputChange} placeholder="Masukkan nama lengkap Anda" hasError={errorField === 'name'} />
                             <InputField icon="https://icongr.am/feather/mail.svg?size=20&color=9ca3af" label="Email Aktif" id="email" type="email" value={formData.email} onChange={onInputChange} hasError={errorField === 'email'} placeholder="email@contoh.com" />
                            {!isResubmitMode && (

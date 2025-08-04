@@ -32,14 +32,23 @@ export const useAuth = () => useContext(AuthContext);
 function App() {
 
    const [auth, setAuth] = useState({ token: null, user: null, isLoggedIn: false });
+   const [authLoading, setAuthLoading] = useState(true); 
 
     useEffect(() => {
-        // Cek localStorage sekali saat aplikasi dimuat
-        const token = localStorage.getItem('token');
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (token && user) {
-            setAuth({ token, user, isLoggedIn: true });
+        try {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (token && user) {
+                setAuth({ token, user, isLoggedIn: true });
+            }
+        } catch (error) {
+            console.error("Gagal mem-parsing data user:", error);
+            localStorage.clear();
+        } finally {
+            // Tandai bahwa proses pengecekan selesai
+            setAuthLoading(false); 
         }
+
     }, []);
 
     const login = (token, user) => {
@@ -53,10 +62,11 @@ function App() {
         localStorage.removeItem('user');
         setAuth({ token: null, user: null, isLoggedIn: false });
     };
+    const authContextValue = { ...auth, login, logout, authLoading };
 
 
   return (
-    <AuthContext.Provider value={{ ...auth, login, logout }}>
+    <AuthContext.Provider value={{ authContextValue }}>
     <Router>
       <div className="flex flex-col min-h-screen">
         <Navbar />
