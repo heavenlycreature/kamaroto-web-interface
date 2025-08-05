@@ -206,12 +206,21 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
         submissionData.append('address_village', selectedAddress.subdistrict);
         submissionData.append("latitude", coordinates.latitude);
         submissionData.append("longitude", coordinates.longitude);
+        if (formData.referral_code) {
+        submissionData.set('referral_code', formData.referral_code.toLowerCase());
+    }
         if (selfieFile) {
             submissionData.append("selfie_url", selfieFile);
         }
        
         const endpoint = isResubmitMode ? '/resubmit' : '/register/captain';
         const method = isResubmitMode ? 'put' : 'post';
+
+    //     console.log("--- [DEBUG] Data FormData yang akan dikirim: ---");
+    // for (const pair of submissionData.entries()) {
+    //   console.log(`${pair[0]}: `, pair[1]);
+    // }
+    // console.log("---------------------------------------------");
 
         try {
             await api[method](endpoint, submissionData, {

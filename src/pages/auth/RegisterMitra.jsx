@@ -200,11 +200,16 @@ const RegisterMitra = ({isResubmitMode = false}) => {
             social_media_platform: socialMediaPlatform,
             latitude: coordinates.latitude,
             longitude: coordinates.longitude,
+            referral_code: formData.referral_code.toLowerCase(),
          };
         
         // 5. Tentukan endpoint dan metode secara dinamis
         const endpoint = isResubmitMode ? '/resubmit' : '/register/mitra';
         const method = isResubmitMode ? 'put' : 'post';
+
+        //  console.log("--- [DEBUG] Data JSON yang akan dikirim: ---");
+        // console.table(submissionData); // Gunakan console.table untuk tampilan rapi
+        // console.log("------------------------------------------");
 
         try {
             await api[method](endpoint, submissionData);
