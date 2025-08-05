@@ -53,7 +53,7 @@ const CaptainProfile = () => {
         handleInputChange, handleBirthDateChange,
     } = useFormHandlers({
         name: "", birth_place: "", gender: "", phone: "", nik: "", email: "",
-        job: "", marital_status: "", education: "", avatar: "", status: ""
+        job: "", marital_status: "", education: "", avatar: "", status: "", referral_code: "",
     });
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem('user'));
@@ -91,6 +91,7 @@ const CaptainProfile = () => {
                     rejection_reason: user.rejection_reason,
                     resubmit_allowed: user.resubmit_allowed,
                     address_detail: profile.address_detail || "",
+                    referral_code: profile.referral_code || "",
                     avatar: profile.selfie_url ? `http://localhost:3000${profile.selfie_url}` : "https://placehold.co/96x96/ffffff/ea580c?text=User"
                 };
                 const initialBirthDateParts = {
@@ -137,6 +138,7 @@ const CaptainProfile = () => {
                 address_subdistrict: selectedAddress.district,
                 address_village: selectedAddress.subdistrict,
                 address_detail: formData.address_detail,
+                referral_code: formData.referral_code,
             };
 
             const endpoint = isResubmit ? '/resubmit' : '/captain/profile/edit';
@@ -157,17 +159,17 @@ const CaptainProfile = () => {
     };
 
     const getFullAddress = () => {
-        const parts = [
+        const parts = [
             // [PERUBAHAN] Tambahkan detail alamat di baris paling atas
-            formData.address_detail, 
-            selectedAddress.subdistrict,
-            selectedAddress.district,
-            selectedAddress.city,
-            selectedAddress.province
-        ];
-        const address = parts.filter(part => part).join(', ');
-        return address || '-';
-    };
+            formData.address_detail,
+            selectedAddress.subdistrict,
+            selectedAddress.district,
+            selectedAddress.city,
+            selectedAddress.province
+        ];
+        const address = parts.filter(part => part).join(', ');
+        return address || '-';
+    };
 
     const handlePasswordChange = async (passwords) => {
         setLoading(true);
@@ -232,7 +234,7 @@ const CaptainProfile = () => {
                         <main className="flex-1 p-8 md:p-12">
                             <div className="max-w-5xl mx-auto space-y-8">
                                 <header className="hidden md:flex items-center justify-between">
-                                    <h1 className="text-4xl font-bold text-gray-900">Pengaturan Akun</h1>
+                                    <h1 className="text-4xl font-bold text-gray-900">Profile Saya</h1>
                                 </header>
 
                                 {saveMessage.text && (
@@ -243,6 +245,7 @@ const CaptainProfile = () => {
 
                                 <InfoCard title="Informasi Pribadi" description="Perbarui data diri Anda di sini." isEditing={isEditing} onEdit={formData.status !== 'pending' ? () => setIsEditing(true) : undefined} footer={EditModeFooter}>
                                     <dl className="divide-y divide-gray-200">
+                                        <ProfileField label="Kode Referal" value={formData.referral_code?.toUpperCase()} />
                                         <ProfileField label="Nama Lengkap" name="name" value={formData.name} isEditing={isEditing} onChange={handleInputChange} />
                                         <ProfileField label="Tempat & Tanggal Lahir">
                                             {isEditing ? (
