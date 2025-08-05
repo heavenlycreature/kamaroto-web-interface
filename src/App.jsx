@@ -26,6 +26,8 @@ import CaptainProfile from './pages/captain/CaptainProfile';
 import GuestRoute from './components/auth/GuestRoute';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import MitraProfile from './pages/mitra/MitraProfile';
+import ReferredUsersPage from './pages/captain/ReferredUserPage';
+import SettingsPage from './pages/admin/SettingsPage';
 
 export const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
@@ -101,10 +103,12 @@ function App() {
             <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
             <Route path="/admin/approval" element={<ProtectedRoute><ApprovalPage /></ProtectedRoute>} />
+            <Route path="/admin/pengaturan" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             
             {/* Rute Pengguna */}
             <Route path="/status" element={<ProtectedRoute><StatusPage /></ProtectedRoute>} />
             <Route path="/captain/profile" element={<ProtectedRoute><CaptainProfile /></ProtectedRoute>} />
+            <Route path="/captain/recruits" element={<ProtectedRoute><ReferredUsersPage /></ProtectedRoute>} />
 
             <Route path="/mitra/profile" element={<ProtectedRoute><MitraProfile /></ProtectedRoute>} />
             

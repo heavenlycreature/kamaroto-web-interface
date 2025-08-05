@@ -34,10 +34,14 @@ const MemberDetailView = ({ member, type, onBack, onApprove, onReject, showAppro
             <main className="p-6 overflow-y-auto">
                 {/* PERBAIKAN: Tampilkan data dasar jika profil tidak ada (untuk user pending) */}
                 {!profile && (
-                     <dl className="divide-y divide-slate-200">
+                    <dl className="divide-y divide-slate-200">
                         <DetailRow label="Nama Lengkap" value={member.name} />
                         <DetailRow label="Email" value={member.email} />
                         <DetailRow label="Nomor HP" value={member.phone} />
+                        <DetailRow
+                            label="Direferensikan Oleh"
+                            value={member.referrer ? `${member.referrer.name} (${member.referrer.email})` : 'Pendaftaran Mandiri'}
+                        />
                         <DetailRow label="Tanggal Bergabung" value={formatDate(member.created_at)} />
                         <dt className="text-sm font-medium text-slate-400 pt-4">Detail lengkap akan tersedia setelah akun disetujui.</dt>
                     </dl>
@@ -46,6 +50,10 @@ const MemberDetailView = ({ member, type, onBack, onApprove, onReject, showAppro
                 {/* Tampilkan detail lengkap jika profil ada */}
                 {type === 'captain' && profile && (
                     <dl className="divide-y divide-slate-200">
+                        <DetailRow
+                            label="Direferensikan Oleh"
+                            value={member.referrer ? `${member.referrer.name} (${member.referrer.email})` : 'Pendaftaran Mandiri'}
+                        />
                         <DetailRow label="Nama Lengkap" value={profile.name} />
                         <DetailRow label="Email" value={profile.email} />
                         <DetailRow label="Nomor HP" value={member.phone} />
@@ -62,7 +70,11 @@ const MemberDetailView = ({ member, type, onBack, onApprove, onReject, showAppro
                     </dl>
                 )}
                 {type === 'mitra' && profile && (
-                     <dl className="divide-y divide-slate-200">
+                    <dl className="divide-y divide-slate-200">
+                        <DetailRow
+                            label="Direferensikan Oleh"
+                            value={member.referrer ? `${member.referrer.name} (${member.referrer.email})` : 'Pendaftaran Mandiri'}
+                        />
                         <DetailRow label="Nama PIC" value={profile.pic_name} />
                         <DetailRow label="Email PIC" value={profile.pic_email} />
                         <DetailRow label="Nomor HP PIC" value={profile.pic_phone} />

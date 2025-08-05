@@ -16,17 +16,15 @@ import { useAddressDropdown } from '../../hooks/useAddressDropdown';
 const MenuIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>;
 
 const captainNavLinks = [
-    {
-        to: '/captain/profile',
-        label: 'Profil Saya',
-        // Menggunakan ikon 'user' dari set Feather
-        icon: <img src="https://icongr.am/feather/user.svg?size=20&color=ffffff" alt="Profil" />,
+    { 
+        to: '/captain/profile', 
+        label: 'Profil Saya', 
+        icon: <img src="https://icongr.am/feather/user.svg?size=20&color=currentColor" alt="Profil"/> 
     },
-    {
-        to: '/captain/mitra', // Ganti dengan path yang sesuai
-        label: 'Daftar Mitra',
-        // Menggunakan ikon 'user-check' dari set Feather
-        icon: <img src="https://icongr.am/feather/user-check.svg?size=20&color=ffffff" alt="Mitra" />,
+    { 
+        to: '/captain/recruits', // <-- Ubah path ke halaman baru
+        label: 'Rekrutan Saya',   // <-- Ubah label
+        icon: <img src="https://icongr.am/feather/users.svg?size=20&color=currentColor" alt="Rekrutan"/> // <-- Ikon baru yang lebih sesuai
     },
 ];
 

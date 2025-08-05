@@ -98,6 +98,16 @@ const MembershipPage = () => {
                 </div>
             </td>
             <td className="px-6 py-4">{activeTab === 'captain' ? 'Captain Officer' : member.mitraProfile?.business_type || 'N/A'}</td>
+            <td className="px-6 py-4">
+                {member.referrer ? (
+                    <div>
+                        <div className="font-medium text-slate-800">{member.referrer.name}</div>
+                        <div className="text-xs text-slate-500">{member.referrer.email}</div>
+                    </div>
+                ) : (
+                    <span className="text-slate-400">-</span>
+                )}
+            </td>
             <td className="px-6 py-4">{formatDate(member.created_at)}</td>
             <td className="px-6 py-4 text-center space-x-2">
                 <button onClick={() => handleDetailClick(member)} className="cursor-pointer font-semibold text-blue-600 hover:text-blue-800 px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 transition-colors">Detail</button>

@@ -21,7 +21,7 @@ const ApprovalPage = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [selectedMember, setSelectedMember] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [confirmation, setConfirmation] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, intent: 'danger' });
+    const [confirmation, setConfirmation] = useState({ isOpen: false, title: '', message: '', onConfirm: () => { }, intent: 'danger' });
     const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
 
     useEffect(() => {
@@ -51,7 +51,7 @@ const ApprovalPage = () => {
             setLoading(false);
         }
     };
-    
+
     // --- PERBAIKAN: Fungsi Aksi digabungkan dan diperbaiki ---
     const handleAction = (userId, action) => { // action: 'approve' atau 'reject'
         const actionText = action === 'approve' ? 'menyetujui' : 'menolak';
@@ -103,7 +103,7 @@ const ApprovalPage = () => {
     const handleDetailClick = (member) => { setSelectedMember(member); setView('detail'); };
     const handleBackToList = () => { setSelectedMember(null); setView('list'); };
 
-    const filteredMembers = pendingMembers.filter(member => 
+    const filteredMembers = pendingMembers.filter(member =>
         (member.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
         (member.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
@@ -152,6 +152,8 @@ const ApprovalPage = () => {
                                                                 <tr>
                                                                     <th scope="col" className="px-6 py-3">Nama Lengkap</th>
                                                                     <th scope="col" className="px-6 py-3">No HP / WA</th>
+                                                                    {/* [PERUBAHAN] Tambah header kolom baru */}
+                                                                    <th scope="col" className="px-6 py-3">Direferensikan Oleh</th>
                                                                     <th scope="col" className="px-6 py-3 text-center">Review Formulir</th>
                                                                     <th scope="col" className="px-6 py-3 text-center">Persetujuan</th>
                                                                 </tr>
@@ -164,6 +166,17 @@ const ApprovalPage = () => {
                                                                             <div className="text-xs text-slate-500">{member.email}</div>
                                                                         </td>
                                                                         <td className="px-6 py-4">{member.phone}</td>
+                                                                        {/* [PERUBAHAN] Tambah sel (cell) baru untuk data referrer */}
+                                                                        <td className="px-6 py-4">
+                                                                            {member.referrer ? (
+                                                                                <div>
+                                                                                    <div className="font-medium text-slate-800">{member.referrer.name}</div>
+                                                                                    <div className="text-xs text-slate-500">{member.referrer.email}</div>
+                                                                                </div>
+                                                                            ) : (
+                                                                                <span className="text-slate-400">-</span>
+                                                                            )}
+                                                                        </td>
                                                                         <td className="px-6 py-4 text-center">
                                                                             <button onClick={() => handleDetailClick(member)} className="cursor-pointer font-semibold text-blue-600 hover:text-blue-800 px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 transition-colors">Review</button>
                                                                         </td>
@@ -182,9 +195,9 @@ const ApprovalPage = () => {
                                         </div>
                                     </>
                                 ) : (
-                                    <MemberDetailView 
-                                        member={selectedMember} 
-                                        type={activeTab} 
+                                    <MemberDetailView
+                                        member={selectedMember}
+                                        type={activeTab}
                                         onBack={handleBackToList}
                                         onApprove={() => handleAction(selectedMember.id, 'approve')}
                                         onReject={() => handleAction(selectedMember.id, 'reject')}
