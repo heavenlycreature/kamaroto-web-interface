@@ -4,27 +4,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/images/kamaroto1.png';
+import { useAuth } from '../App'; // <-- 1. Impor useAuth
 
 const StatusPage = () => {
-   const [userData, setUserData] = useState(null);
+    const [userData, setUserData] = useState(null);
     const navigate = useNavigate();
+    const { logout, user } = useAuth(); // <-- 2. Ambil fungsi logout dan user dari context
 
     useEffect(() => {
-        const storedUser = JSON.parse(localStorage.getItem('user'));
-
-        if (!storedUser) {
-            navigate('/login');
-            return;
-        }
-
-        // Hanya izinkan jika status 'pending' atau 'rejected'
-        if (storedUser.status !== 'pending' && storedUser.status !== 'rejected') {
-            navigate('/');
-            return;
-        }
-
-        setUserData(storedUser);
-    }, [navigate]);
+        // Logika di sini sekarang jauh lebih sederhana karena ProtectedRoute sudah bekerja
+        setUserData(user);
+    }, [user]);
 
     const handleResubmit = () => {
         if (userData.role === 'co') {
@@ -34,10 +24,10 @@ const StatusPage = () => {
         }
     };
 
+    // [PERBAIKAN] Fungsi logout sekarang hanya memanggil fungsi dari context
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        navigate('/login');
+        logout();
+        // navigate('/login') tidak diperlukan lagi karena akan dihandle oleh ProtectedRoute
     };
 
     if (!userData) {
