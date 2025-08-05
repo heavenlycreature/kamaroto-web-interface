@@ -6,28 +6,34 @@ import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/images/kamaroto1.png';
 
 const StatusPage = () => {
-    const [userData, setUserData] = useState(null);
+   const [userData, setUserData] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
         const storedUser = JSON.parse(localStorage.getItem('user'));
-        if (storedUser) {
-            setUserData(storedUser);
-        } else {
-            // Jika tidak ada data user, arahkan ke login
+
+        if (!storedUser) {
             navigate('/login');
+            return;
         }
+
+        // Hanya izinkan jika status 'pending' atau 'rejected'
+        if (storedUser.status !== 'pending' && storedUser.status !== 'rejected') {
+            navigate('/');
+            return;
+        }
+
+        setUserData(storedUser);
     }, [navigate]);
 
     const handleResubmit = () => {
-        // Arahkan ke halaman pendaftaran yang sesuai dengan role
         if (userData.role === 'co') {
-            navigate('/captain/resubmit', { state:  { userId: userData.id } });
+            navigate('/captain/resubmit', { state: { userId: userData.id } });
         } else if (userData.role === 'mitra') {
-            navigate('/mitra/resubmit', { state:  { userId: userData.id } });
+            navigate('/mitra/resubmit', { state: { userId: userData.id } });
         }
     };
-    
+
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -37,6 +43,8 @@ const StatusPage = () => {
     if (!userData) {
         return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
     }
+
+    const isRejected = userData.status === 'rejected';
 
     return (
         <div className="relative flex items-center justify-center min-h-screen bg-gray-50 overflow-hidden">
@@ -50,13 +58,27 @@ const StatusPage = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">Pendaftaran Anda Ditolak</h2>
-                <p className="text-gray-600 mt-4">Alasan Penolakan:</p>
-                <p className="mt-2 font-semibold text-gray-800 bg-red-50 p-3 rounded-md">
-                    {userData.rejection_reason || 'Tidak ada alasan spesifik yang diberikan.'}
-                </p>
-                
-                {userData.resubmit_allowed && (
+
+                <h2 className="text-2xl font-bold text-gray-900">
+                    {isRejected ? 'Pendaftaran Anda Ditolak' : 'Akun Anda Sedang Menunggu Persetujuan'}
+                </h2>
+
+                {isRejected && (
+                    <>
+                        <p className="text-gray-600 mt-4">Alasan Penolakan:</p>
+                        <p className="mt-2 font-semibold text-gray-800 bg-red-50 p-3 rounded-md">
+                            {userData.rejection_reason || 'Tidak ada alasan spesifik yang diberikan.'}
+                        </p>
+                    </>
+                )}
+
+                {!isRejected && (
+                    <p className="text-gray-600 mt-4">
+                        Harap menunggu persetujuan dari admin. Anda akan mendapatkan notifikasi setelah akun disetujui.
+                    </p>
+                )}
+
+                {isRejected && userData.resubmit_allowed && (
                     <div className="mt-6">
                         <p className="text-gray-600 mb-4">Anda diizinkan untuk memperbaiki dan mengirim ulang data Anda.</p>
                         <button

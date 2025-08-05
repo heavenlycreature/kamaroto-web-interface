@@ -19,36 +19,22 @@ api.interceptors.request.use(
     }
 );
 
-// Interceptor untuk response (yang diperbaiki)
 api.interceptors.response.use(
-    (response) => {
-        return response;
-    },
+    (response) => response,
     (error) => {
-        // Cek jika ada objek 'response' pada error
-        if (error.response) {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const isAuthError = error.response.status === 401 || error.response.status === 403;
-            // Cek apakah URL request BUKAN '/login'
-            const isNotLoginPage = error.config.url !== '/login';
+        const isAuthError = error.response?.status === 401;
+        const isNotLoginOrResubmit = !error.config?.url?.includes('/login') && !error.config?.url?.includes('/resubmit');
 
-            //  if (user?.status === 'rejected' && window.location.pathname.includes('/resubmit')) {
-            //     return Promise.reject(error); // Biarkan komponen menangani error
-            // }
-
-            // HANYA jalankan logout otomatis jika KEDUA kondisi terpenuhi
-            if (isAuthError && isNotLoginPage && user?.status !== 'rejected') {
-                console.log("Token tidak valid atau sesi kedaluwarsa. Logout otomatis.");
-                
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                
-                window.location.href = '/login?sessionExpired=true';
-            }
+        // Hanya logout otomatis jika token benar-benar tidak valid/hilang di rute terproteksi
+        if (isAuthError && isNotLoginOrResubmit) {
+            console.warn("Sesi tidak valid. Logout otomatis.");
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login?sessionExpired=true';
         }
-        
-        // Selalu kembalikan error agar komponen (seperti Login.jsx) bisa menanganinya
+
         return Promise.reject(error);
     }
 );
+
 export default api;

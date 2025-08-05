@@ -55,23 +55,30 @@ function App() {
     }, []);
 
     const login = async (email, password) => {
-       try {
-            const response = await api.post('/login', { email, password });
-            const { token, user } = response.data;
+      try {
+        const response = await api.post('/login', { email, password });
+        const { token, user } = response.data;
 
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-            setAuth({ token, user, isLoggedIn: true });
-
-            // Kembalikan data user jika berhasil
-            return { success: true, user };
-
-        } catch (error) {
-            // Jika error, kembalikan data error dari backend
-            return { success: false, error: error.response?.data };
+        // ✅ Hanya simpan token dan tandai login jika token tersedia
+        if (token) {
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(user));
+          setAuth({ token, user, isLoggedIn: true });
+        } else {
+          // ⛔ Tidak simpan token atau tandai login jika tidak ada token
+          localStorage.removeItem('token');
+          localStorage.setItem('user', JSON.stringify(user));
+          setAuth({ token: null, user, isLoggedIn: false });
         }
-    };
 
+        return { success: true, user };
+      } catch (error) {
+        return {
+          success: false,
+          error: error.response?.data
+        };
+      }
+    };
     const logout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -106,7 +113,7 @@ function App() {
             <Route path="/admin/pengaturan" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             
             {/* Rute Pengguna */}
-            <Route path="/status" element={<ProtectedRoute><StatusPage /></ProtectedRoute>} />
+            <Route path="/status" element={<StatusPage />} />
             <Route path="/captain/profile" element={<ProtectedRoute><CaptainProfile /></ProtectedRoute>} />
             <Route path="/captain/recruits" element={<ProtectedRoute><ReferredUsersPage /></ProtectedRoute>} />
 

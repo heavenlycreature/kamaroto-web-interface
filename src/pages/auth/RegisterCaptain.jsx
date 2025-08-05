@@ -82,12 +82,11 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
 
             const fetchMyProfile = async () => {
                 try {
-                    const response = await api.get(`/profile/me/${location.state.userId}`, {
-                        headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`
-                    }
-                    }); // Panggil endpoint baru
+                    const response = await api.get(`/profile/me`); // Panggil endpoint baru
                     const profileData = response.data;
+                     if (isResubmitMode && profileData?.status !== 'rejected') {
+                    return navigate('/login')
+                    }
 
                     // Isi state form dengan data yang diterima dari backend
                     setFormData({

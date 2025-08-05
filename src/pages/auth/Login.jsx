@@ -27,63 +27,54 @@ const InputField = ({ icon, label, id, type = 'text', placeholder, required = tr
 );
 
 const Login = () => {
-    const { user, isLoggedIn, login } = useAuth(); // <-- Gunakan hook untuk mendapatkan fungsi login
-    const [formData, setFormData] = useState({
-        email: '',
-        password: ''
-    });
+    const { login } = useAuth(); 
+    const navigate = useNavigate();
+
+    const [formData, setFormData] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
-    const navigate = useNavigate();
+
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e) => {
-            e.preventDefault();
-            setLoading(true);
-            setMessage({ type: '', text: '' });
+   
+   const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setMessage({ type: '', text: '' });
 
-            // Panggil fungsi login terpusat dari context
-            const result = await login(formData.email, formData.password);
+        // Panggil fungsi login terpusat dari context
+        const result = await login(formData.email, formData.password);
 
-            setLoading(false);
+        setLoading(false);
 
-            if (!result.success) {
-                const errorData = result.error;
-                const userStatus = errorData?.user?.status;
+        // Jika login berhasil (kredensial benar)
+        if (result.success) {
+            const user = result.user;
+            let destination = '/';
 
-                if (userStatus === 'rejected' || userStatus === 'pending') {
-                    // Simpan data user (tanpa token) dan arahkan ke status
-                    localStorage.removeItem('token');
-                    localStorage.setItem('user', JSON.stringify(errorData.user));
-                    navigate('/status');
-                } else {
-                    // Untuk error lain (password salah, dll.)
-                    setMessage({ type: 'error', text: errorData.message || 'Terjadi kesalahan.' });
-                }
+            // Tentukan tujuan berdasarkan status
+            if (user.status === 'rejected' || user.status === 'pending') {
+                destination = '/status';
+            } else if (user.status === 'approved' || user.status === 'active') {
+                // Jika status OK, tentukan tujuan berdasarkan role
+                if (user.role === 'admin') destination = '/admin/dashboard';
+                else if (user.role === 'co') destination = '/captain/profile';
+                else if (user.role === 'mitra') destination = '/mitra/profile';
             }
-        };
-        useEffect(() => {
-            if (isLoggedIn && user) {
-                const status = user.status;
-                const role = user.role;
+            
+            // Lakukan navigasi
+            navigate(destination);
 
-                if (status === 'pending' || status === 'rejected') {
-                    navigate('/status');
-                } else if (role === 'admin') {
-                    navigate('/admin/dashboard');
-                } else if (role === 'co') {
-                    navigate('/captain/profile');
-                } else if (role === 'mitra') {
-                    navigate('/mitra/profile');
-                } else {
-                    navigate('/');
-                }
-            }
-        }, [isLoggedIn, user, navigate]);
+        } else {
+            // Jika login gagal (kredensial salah atau error server)
+            setMessage({ type: 'error', text: result.error?.message || 'Terjadi kesalahan.' });
+        }
+    };
+
 
     return (
         <div className="relative flex items-center justify-center min-h-screen bg-gray-50 overflow-hidden">

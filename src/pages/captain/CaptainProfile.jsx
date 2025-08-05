@@ -72,11 +72,6 @@ const CaptainProfile = () => {
 
                 const user = response.data;
                 const profile = user.coProfile;
-                console.log('====================================');
-                console.log('DEBUGGING DATA DARI API');
-                console.log('Seluruh object user yang diterima:', user);
-                console.log('Hanya object coProfile:', profile);
-                console.log('====================================');
                 if (!profile) throw new Error("Data profil tidak ditemukan.");
 
                 const birthDate = new Date(profile.birth_date);

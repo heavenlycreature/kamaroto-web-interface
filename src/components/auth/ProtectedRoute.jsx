@@ -3,32 +3,43 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../App';
 
 const ProtectedRoute = ({ children }) => {
-    const { isLoggedIn, user, authLoading } = useAuth();
+    const { isLoggedIn, authLoading, user } = useAuth();
     const location = useLocation();
 
-    // 1. Tampilkan loading jika context sedang memverifikasi status login awal
-    if (authLoading) {
+     if (authLoading) {
         return <div className="flex items-center justify-center min-h-screen">Memverifikasi sesi...</div>;
     }
 
-    // 2. Jika sudah selesai loading dan TIDAK login, alihkan ke halaman login
+    // 2. Jika sudah selesai loading dan TIDAK login, paksa ke halaman login
     if (!isLoggedIn) {
         return <Navigate to="/login" replace />;
     }
 
-    // 3. Jika SUDAH login, cek statusnya
+    // 3. Jika SUDAH login, kita periksa status untuk otorisasi
     const userStatus = user?.status;
+    const currentPath = location.pathname;
 
-    // Jika statusnya pending atau rejected, mereka hanya boleh mengakses halaman tertentu
-    if (userStatus === 'pending' || userStatus === 'rejected') {
-        const allowedRoutes = ['/status', '/captain/resubmit', '/mitra/resubmit'];
-        // Jika mereka mencoba mengakses halaman LAIN selain yang diizinkan, paksa ke /status
-        if (!allowedRoutes.includes(location.pathname)) {
+    const resubmitRoutes = ['/status', '/captain/resubmit', '/mitra/resubmit'];
+
+    // KASUS 1: Pengguna 'rejected' atau 'pending'
+    if (userStatus === 'rejected' || userStatus === 'pending') {
+        // Jika mereka mencoba mengakses halaman selain halaman status/resubmit,
+        // paksa mereka kembali ke halaman status.
+        if (!resubmitRoutes.includes(currentPath)) {
             return <Navigate to="/status" replace />;
         }
     }
     
-    // 4. Jika semua kondisi di atas aman, tampilkan halaman yang diminta
+    // KASUS 2: Pengguna 'approved' atau 'active'
+    if (userStatus === 'approved' || userStatus === 'active') {
+        // Jika pengguna yang sudah aktif mencoba mengakses halaman status/resubmit,
+        // arahkan mereka ke halaman utama agar tidak bingung.
+        if (resubmitRoutes.includes(currentPath)) {
+            return <Navigate to="/" replace />;
+        }
+    }
+
+    // 4. Jika semua pemeriksaan lolos, tampilkan halaman yang diminta
     return children;
 };
 
