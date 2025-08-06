@@ -28,6 +28,8 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import MitraProfile from './pages/mitra/MitraProfile';
 import ReferredUsersPage from './pages/captain/ReferredUserPage';
 import SettingsPage from './pages/admin/SettingsPage';
+import CheckEmailPage from './pages/auth/CheckEmailPage';
+import VerifyPage from './pages/auth/VerifyPage';
 
 export const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
@@ -107,6 +109,8 @@ function App() {
               {/* --- Rute Publik --- */}
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
+              <Route path="/verify-email" element={<CheckEmailPage />} />
+              <Route path="/verify" element={<VerifyPage />} />
 
               {/* --- Rute Khusus Tamu (Tidak Bisa Diakses Jika Sudah Login) --- */}
               <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />

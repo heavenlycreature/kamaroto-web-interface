@@ -236,7 +236,10 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
             localStorage.removeItem('captainBirthDateParts');
             localStorage.removeItem('captainSelectedAddress');
 
-            setTimeout(() => navigate('/login'), 2000);
+            setTimeout(() => {
+                const destination = isResubmitMode ? '/status' : '/verify-email';
+                navigate(destination);
+            }, 2000);
         } catch (error) {
             const errorMessage = error.response?.data?.message || "Terjadi kesalahan.";
             const errorSourceField = error.response?.data?.field || null;

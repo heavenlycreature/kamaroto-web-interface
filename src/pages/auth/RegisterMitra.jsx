@@ -221,7 +221,10 @@ const RegisterMitra = ({isResubmitMode = false}) => {
             localStorage.removeItem('mitraBusinessAddress');
             localStorage.removeItem('mitraSocialPlatform');
             
-            setTimeout(() => navigate('/login'), 2000);
+             setTimeout(() => {
+                const destination = isResubmitMode ? '/status' : '/verify-email';
+                navigate(destination);
+            }, 2000);
         } catch (error) {
             setMessage({ type: 'error', text: error.response?.data?.message || 'Terjadi kesalahan.' });
         } finally {
