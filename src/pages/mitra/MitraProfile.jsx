@@ -34,6 +34,7 @@ const MitraProfile = () => {
 
     const { formData, setFormData, handleInputChange } = useFormHandlers({
         email: "", phone: "", status: "", avatar: "",
+        email_is_verified: false, 
         pic_name: "", pic_phone: "", pic_email: "", pic_status: "",
         owner_name: "", owner_phone: "", owner_email: "", owner_ktp: "",
         business_type: "", business_entity: "", business_name: "",
@@ -65,6 +66,7 @@ const MitraProfile = () => {
 
                 const initialFormData = {
                     email: user.email, phone: user.phone, status: user.status,
+                    email_is_verified: user.email_is_verified || false,
                     avatar: "https://placehold.co/96x96/ffffff/ea580c?text=Mitra",
                     pic_name: mitraProfile.pic_name || "", pic_phone: mitraProfile.pic_phone || "", pic_email: mitraProfile.pic_email || "", pic_status: mitraProfile.pic_status || "",
                     owner_name: mitraProfile.owner_name || "", owner_phone: mitraProfile.owner_phone || "", owner_email: mitraProfile.owner_email || "", owner_ktp: mitraProfile.owner_ktp || "",
@@ -284,6 +286,11 @@ const MitraProfile = () => {
                                 <InfoCard title="Keamanan Akun" description="Ubah password Anda secara berkala.">
                                     <dl className="divide-y divide-gray-200">
                                         <ProfileField label="Email Akun" value={formData.email} isEditing={false} />
+                                        <ProfileField 
+                                            label="Status Verifikasi Email" 
+                                            value={formData.email_is_verified ? 'Ya' : 'Tidak'} 
+                                            isEditing={false} 
+                                        />
                                         <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5">
                                             <dt className="text-sm font-medium text-gray-500">Password</dt>
                                             <dd className="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">

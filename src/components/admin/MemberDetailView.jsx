@@ -56,6 +56,7 @@ const MemberDetailView = ({ member, type, onBack, onApprove, onReject, showAppro
                         />
                         <DetailRow label="Nama Lengkap" value={profile.name} />
                         <DetailRow label="Email" value={profile.email} />
+                        <DetailRow label="Email Ter-verifikasi" value={member.email_is_verified ? 'Ya' : 'Tidak'}/>
                         <DetailRow label="Nomor HP" value={member.phone} />
                         <DetailRow label="Nomor KTP" value={profile.nik} />
                         <DetailRow label="Tempat & Tanggal Lahir" value={`${profile.birth_place || ''}, ${formatDate(profile.birth_date)}`} />
@@ -81,6 +82,7 @@ const MemberDetailView = ({ member, type, onBack, onApprove, onReject, showAppro
                         <DetailRow label="Nomor HP PIC" value={profile.pic_phone} />
                         <DetailRow label="Nama Pemilik" value={profile.owner_name} />
                         <DetailRow label="Email Pemilik" value={profile.owner_email} />
+                        <DetailRow label="Email Ter-verifikasi" value={member.email_is_verified ? 'Ya' : 'Tidak'}/>
                         <DetailRow label="Nomor HP Pemilik" value={profile.owner_phone} />
                         <DetailRow label="Alamat Pemilik" value={`${profile.owner_address_detail}, ${profile.owner_address_village}, ${profile.owner_address_subdistrict}, ${profile.owner_address_city}, ${profile.owner_address_province}`} />
                         <DetailRow label="Tanggal Bergabung" value={formatDate(member.created_at)} />
