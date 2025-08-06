@@ -6,7 +6,7 @@ import api from '../../api/api';
 import usePersistentState from '../../hooks/usePersistentState';
 import { useAddressDropdown } from '../../hooks/useAddressDropdown';
 import { usePasswordValidation } from '../../hooks/usePasswordValidation';
-import { useFormHandlers } from '../../hooks/useFormHandlers'; 
+import { useFormHandlers } from '../../hooks/useFormHandlers';
 
 // Impor komponen UI
 import { InputField, SelectField } from "../../components/form/FormElements";
@@ -19,11 +19,11 @@ const PasswordRequirement = ({ isValid, text }) => (
     </p>
 );
 
-const RegisterCaptain = ({isResubmitMode = false}) => {
-   const navigate = useNavigate();
-   const location = useLocation(); 
-   
-   
+const RegisterCaptain = ({ isResubmitMode = false }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+
     // --- STATE MANAGEMENT DENGAN CUSTOM HOOKS ---
 
     const initialFormData = {
@@ -42,8 +42,8 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
         handleInputChange,
         handleBirthDateChange,
     } = useFormHandlers(initialFormData, 'captainFormData', 'captainBirthDateParts');
-    
-   
+
+
     // Gunakan usePersistentState untuk state alamat
     const [selectedAddress, setSelectedAddress] = usePersistentState('captainSelectedAddress', initialAddress);
 
@@ -62,7 +62,7 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
         addressOptions,
         handleAddressChange,
     } = useAddressDropdown(selectedAddress, setSelectedAddress);
-    
+
     // State lain yang tidak dikelola oleh hook
     const [selfieFile, setSelfieFile] = useState(null);
     const [selfiePreview, setSelfiePreview] = useState(null);
@@ -71,11 +71,14 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
     const [message, setMessage] = useState({ type: "", text: "" });
     const [errorField, setErrorField] = useState(null);
 
-     useEffect(() => {
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    useEffect(() => {
         // Cek apakah ada state 'resubmitData' yang dikirim dari StatusPage
         if (isResubmitMode && location.state?.userId) {
-             console.log("Mode pendaftaran ulang, mengambil data dari endpoint publik...");
-        
+            console.log("Mode pendaftaran ulang, mengambil data dari endpoint publik...");
+
             localStorage.removeItem('captainFormData');
             localStorage.removeItem('captainBirthDateParts');
             localStorage.removeItem('captainSelectedAddress');
@@ -84,8 +87,8 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
                 try {
                     const response = await api.get(`/profile/me`); // Panggil endpoint baru
                     const profileData = response.data;
-                     if (isResubmitMode && profileData?.status !== 'rejected') {
-                    return navigate('/login')
+                    if (isResubmitMode && profileData?.status !== 'rejected') {
+                        return navigate('/login')
                     }
 
                     // Isi state form dengan data yang diterima dari backend
@@ -103,7 +106,7 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
                         password: '', // Password dikosongkan untuk keamanan
                         agreement: false,
                     });
-                    
+
                     // Isi state untuk alamat
                     setSelectedAddress({
                         province: profileData.coProfile.address_province,
@@ -122,8 +125,8 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
                         });
                     }
                     if (profileData.coProfile?.selfie_url) {
-                    setSelfiePreview(`http://localhost:3000${profileData.coProfile.selfie_url}`);
-                }
+                        setSelfiePreview(`http://localhost:3000${profileData.coProfile.selfie_url}`);
+                    }
 
                 } catch (error) {
                     console.error("Gagal memuat data untuk pendaftaran ulang:", error);
@@ -136,13 +139,13 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
 
 
     // --- LOGIC & API CALLS ---
-    
+
     useEffect(() => {
         if (!isResubmitMode && selectedAddress.subdistrict) {
             const { province, city, district, subdistrict } = selectedAddress;
             api.get(`/address/coordinates?province=${province}&city=${city}&district=${district}&subdistrict=${subdistrict}`)
-               .then((res) => setCoordinates(res.data))
-               .catch(err => console.error("Error fetching coordinates:", err));
+                .then((res) => setCoordinates(res.data))
+                .catch(err => console.error("Error fetching coordinates:", err));
         }
     }, [selectedAddress.subdistrict, isResubmitMode]);
 
@@ -185,18 +188,18 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
         setErrorField(null);
 
         // Validasi frontend
-       if (!isResubmitMode) {
-        if (Object.values(passwordValidation).some(v => !v)) {
-            setMessage({ type: "error", text: "Password belum memenuhi semua persyaratan." });
-            return;
+        if (!isResubmitMode) {
+            if (Object.values(passwordValidation).some(v => !v)) {
+                setMessage({ type: "error", text: "Password belum memenuhi semua persyaratan." });
+                return;
+            }
+            if (formData.password !== confirmPassword) {
+                setMessage({ type: 'error', text: 'Password dan konfirmasi password tidak cocok.' });
+                return;
+            }
         }
-        if (formData.password !== confirmPassword) {
-            setMessage({ type: 'error', text: 'Password dan konfirmasi password tidak cocok.' });
-            return;
-        }
-    }
-    
-    setLoading(true);
+
+        setLoading(true);
         const submissionData = new FormData();
         Object.keys(formData).forEach((key) => submissionData.append(key, formData[key]));
         submissionData.append('address_province', selectedAddress.province);
@@ -206,32 +209,32 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
         submissionData.append("latitude", coordinates.latitude);
         submissionData.append("longitude", coordinates.longitude);
         if (formData.referral_code) {
-        submissionData.set('referral_code', formData.referral_code.toLowerCase());
-    }
+            submissionData.set('referral_code', formData.referral_code.toLowerCase());
+        }
         if (selfieFile) {
             submissionData.append("selfie_url", selfieFile);
         }
-       
+
         const endpoint = isResubmitMode ? '/resubmit' : '/register/captain';
         const method = isResubmitMode ? 'put' : 'post';
 
-    //     console.log("--- [DEBUG] Data FormData yang akan dikirim: ---");
-    // for (const pair of submissionData.entries()) {
-    //   console.log(`${pair[0]}: `, pair[1]);
-    // }
-    // console.log("---------------------------------------------");
+        //     console.log("--- [DEBUG] Data FormData yang akan dikirim: ---");
+        // for (const pair of submissionData.entries()) {
+        //   console.log(`${pair[0]}: `, pair[1]);
+        // }
+        // console.log("---------------------------------------------");
 
         try {
             await api[method](endpoint, submissionData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
 
-        const successMessage = isResubmitMode 
-            ? "Data berhasil dikirim ulang! Akun Anda akan ditinjau kembali."
-            : "Pendaftaran berhasil! Akun Anda akan ditinjau admin.";
-        
-        setMessage({ type: "success", text: successMessage });
-            
+            const successMessage = isResubmitMode
+                ? "Data berhasil dikirim ulang! Akun Anda akan ditinjau kembali."
+                : "Pendaftaran berhasil! Akun Anda akan ditinjau admin.";
+
+            setMessage({ type: "success", text: successMessage });
+
             localStorage.removeItem('captainFormData');
             localStorage.removeItem('captainBirthDateParts');
             localStorage.removeItem('captainSelectedAddress');
@@ -261,32 +264,46 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
 
                     <form onSubmit={handleSubmit} className="space-y-10">
                         <FormSection title="Data Diri">
-                            <InputField 
-                                icon="https://icongr.am/feather/gift.svg?size=20&color=9ca3af" 
-                                label="Kode Referral (Opsional)" 
-                                id="referral_code" 
+                            <InputField
+                                icon="https://icongr.am/feather/gift.svg?size=20&color=9ca3af"
+                                label="Kode Referral (Opsional)"
+                                id="referral_code"
                                 name="referral_code"
-                                value={formData.referral_code} 
-                                onChange={handleInputChange} 
+                                value={formData.referral_code}
+                                onChange={handleInputChange}
                                 placeholder="Masukkan kode referral jika ada"
                                 required={false}
                             />
                             <InputField icon="https://icongr.am/feather/user.svg?size=20&color=9ca3af" label="Nama Lengkap" id="name" value={formData.name} onChange={onInputChange} placeholder="Masukkan nama lengkap Anda" hasError={errorField === 'name'} />
                             <InputField icon="https://icongr.am/feather/mail.svg?size=20&color=9ca3af" label="Email Aktif" id="email" type="email" value={formData.email} onChange={onInputChange} hasError={errorField === 'email'} placeholder="email@contoh.com" />
-                           {!isResubmitMode && (
+                            {!isResubmitMode && (
                                 <>
                                     <div>
-                                        <InputField 
-                                            icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" 
-                                            label="Password" 
-                                            id="password" 
-                                            type="password" 
-                                            value={formData.password} 
-                                            onChange={onInputChange} 
-                                            placeholder="Buat password Anda" 
-                                            hasError={errorField === 'password'} 
-                                            required={!isResubmitMode} // Hanya wajib jika BUKAN resubmit
-                                        />
+                                        {/* [PERUBAHAN] Bungkus InputField Password dengan div relative */}
+                                        <div className="relative">
+                                            <InputField
+                                                icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af"
+                                                label="Password"
+                                                id="password"
+                                                type={showPassword ? 'text' : 'password'}
+                                                value={formData.password}
+                                                onChange={onInputChange}
+                                                placeholder="Buat password Anda"
+                                                hasError={errorField === 'password'}
+                                                required={!isResubmitMode}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute inset-y-0 right-0 top-7 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                                            >
+                                                {showPassword ? (
+                                                    <img src="https://icongr.am/feather/eye-off.svg?size=20&color=currentColor" alt="Sembunyikan password" />
+                                                ) : (
+                                                    <img src="https://icongr.am/feather/eye.svg?size=20&color=currentColor" alt="Tampilkan password" />
+                                                )}
+                                            </button>
+                                        </div>
                                         <div className="grid grid-cols-2 gap-x-4 mt-2 pl-2">
                                             <PasswordRequirement isValid={passwordValidation.minLength} text="Min. 8 karakter" />
                                             <PasswordRequirement isValid={passwordValidation.hasUpper} text="1 Huruf Kapital" />
@@ -295,17 +312,30 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
                                         </div>
                                     </div>
                                     <div>
-                                        <InputField 
-                                            icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" 
-                                            label="Konfirmasi Password" 
-                                            id="confirmPassword" 
-                                            type="password" 
-                                            value={confirmPassword} 
-                                            onChange={onConfirmPasswordChange} 
-                                            placeholder="Ulangi password Anda" 
-                                            hasError={!!passwordError} 
-                                            required={!isResubmitMode} // Hanya wajib jika BUKAN resubmit
-                                        />
+                                        <div className="relative">
+                                            <InputField
+                                                icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af"
+                                                label="Konfirmasi Password"
+                                                id="confirmPassword"
+                                                type={showConfirmPassword ? 'text' : 'password'}
+                                                value={confirmPassword}
+                                                onChange={onConfirmPasswordChange}
+                                                placeholder="Ulangi password Anda"
+                                                hasError={!!passwordError}
+                                                required={!isResubmitMode}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                className="absolute inset-y-0 right-0 top-7 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                                            >
+                                                {showConfirmPassword ? (
+                                                    <img src="https://icongr.am/feather/eye-off.svg?size=20&color=currentColor" alt="Sembunyikan password" />
+                                                ) : (
+                                                    <img src="https://icongr.am/feather/eye.svg?size=20&color=currentColor" alt="Tampilkan password" />
+                                                )}
+                                            </button>
+                                        </div>
                                         {passwordError && <p className="text-red-500 text-xs mt-1 ml-1">{passwordError}</p>}
                                     </div>
                                 </>
@@ -350,7 +380,7 @@ const RegisterCaptain = ({isResubmitMode = false}) => {
                         </FormSection>
 
                         <FormSection title="Dokumen & Foto">
-                            <ImageUpload onFileChange={handleFileChange} previewSrc={selfiePreview} isRequired={!isResubmitMode} />
+                            <ImageUpload onFileChange={handleFileChange} previewSrc={selfiePreview} isRequired={!isResubmitMode} title='Foto Selfi Depan Rumah' />
                         </FormSection>
 
                         <FormSection title="Pernyataan">

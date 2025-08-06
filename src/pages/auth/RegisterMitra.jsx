@@ -1,3 +1,6 @@
+// pages/auth/RegisterMitra.jsx
+// Halaman pendaftaran Mitra dengan fungsionalitas upload gambar tempat usaha.
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../api/api';
@@ -11,6 +14,7 @@ import { usePasswordValidation } from '../../hooks/usePasswordValidation';
 // Mengimpor komponen-komponen UI
 import { InputField, SelectField } from '../../components/form/FormElements';
 import FormSection from '../../components/form/FormSection';
+import ImageUpload from '../../components/form/ImageUpload';
 
 // Komponen kecil untuk menampilkan syarat password
 const PasswordRequirement = ({ isValid, text }) => (
@@ -20,9 +24,9 @@ const PasswordRequirement = ({ isValid, text }) => (
 );
 
 
-const RegisterMitra = ({isResubmitMode = false}) => {
-   const navigate = useNavigate();
-   const location = useLocation();
+const RegisterMitra = ({ isResubmitMode = false }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
     // --- STATE MANAGEMENT DENGAN CUSTOM HOOKS ---
     const initialFormData = {
         pic_name: '', pic_phone: '', pic_email: '', pic_status: '',
@@ -40,14 +44,28 @@ const RegisterMitra = ({isResubmitMode = false}) => {
     const { addressOptions: ownerAddressOptions, handleAddressChange: handleOwnerAddressChange } = useAddressDropdown(selectedOwnerAddress, setSelectedOwnerAddress);
     const { addressOptions: businessAddressOptions, handleAddressChange: handleBusinessAddressChange } = useAddressDropdown(selectedBusinessAddress, setSelectedBusinessAddress);
     const [coordinates, setCoordinates] = useState({ latitude: null, longitude: null });
+
+    const [storeImage, setStoreImage] = useState(null);
+    const [storeImagePreview, setStoreImagePreview] = useState('');
+
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
-     useEffect(() => {
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    const onFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setStoreImage(file);
+            setStoreImagePreview(URL.createObjectURL(file));
+        }
+    };
+
+    useEffect(() => {
         if (isResubmitMode) {
             console.log("Mode pendaftaran ulang Mitra terdeteksi, mengambil data profil...");
-            
-            // Hapus draf dari localStorage agar tidak bentrok
+
             localStorage.removeItem('mitraFormData');
             localStorage.removeItem('mitraOwnerAddress');
             localStorage.removeItem('mitraBusinessAddress');
@@ -71,11 +89,10 @@ const RegisterMitra = ({isResubmitMode = false}) => {
                             'biro_jasa': 'Biro Jasa dan Sekolah Mengemudi',
                         };
 
-                        // 2. Gunakan kamus untuk mendapatkan teks yang benar untuk UI
                         const businessTypeForUI = businessTypeReverseMap[mitraProfile.business_type] || '';
 
                         setFormData({
-                            ...formData, // Pertahankan field lain seperti password & agreement
+                            ...formData,
                             pic_name: mitraProfile.pic_name,
                             pic_phone: mitraProfile.pic_phone,
                             pic_email: mitraProfile.pic_email,
@@ -106,7 +123,7 @@ const RegisterMitra = ({isResubmitMode = false}) => {
                             district: mitraProfile.business_address_subdistrict,
                             subdistrict: mitraProfile.business_address_village,
                         });
-                        
+
                         setSocialMediaPlatform(mitraProfile.social_media_platform);
                     }
                 } catch (error) {
@@ -116,19 +133,17 @@ const RegisterMitra = ({isResubmitMode = false}) => {
             };
             fetchMyProfile();
         }
-    }, [isResubmitMode, setFormData, setSelectedOwnerAddress, setSelectedBusinessAddress, setSocialMediaPlatform]);
-
-
+    }, [isResubmitMode, setFormData, setSelectedOwnerAddress, setSelectedBusinessAddress, setSocialMediaPlatform, location.state]);
 
     useEffect(() => {
         if (selectedBusinessAddress.subdistrict) {
             const { province, city, district, subdistrict } = selectedBusinessAddress;
             api.get(`/address/coordinates?province=${province}&city=${city}&district=${district}&subdistrict=${subdistrict}`)
-               .then((res) => setCoordinates(res.data))
-               .catch(err => {
+                .then((res) => setCoordinates(res.data))
+                .catch(err => {
                     console.error("Error fetching coordinates for business address:", err);
                     setCoordinates({ latitude: null, longitude: null });
-               });
+                });
         }
     }, [selectedBusinessAddress.subdistrict]);
 
@@ -155,18 +170,26 @@ const RegisterMitra = ({isResubmitMode = false}) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setMessage({ type: '', text: '' });
-
-        // 4. Validasi password menjadi kondisional
-        if (!isResubmitMode) {
-            if (Object.values(passwordValidation).some(v => !v)) { setMessage({ type: "error", text: "Password belum memenuhi semua persyaratan." }); return; }
-            if (formData.password !== confirmPassword) { setMessage({ type: 'error', text: 'Password dan konfirmasi password tidak cocok.' }); return; }
+        if (formData.password !== confirmPassword && !isResubmitMode) {
+            setMessage({ type: 'error', text: 'Konfirmasi password tidak cocok.' });
+            return;
         }
-        if (!formData.agreement) { setMessage({ type: 'error', text: 'Anda harus menyetujui pernyataan.' }); return; }
+        if (!formData.agreement) {
+            setMessage({ type: 'error', text: 'Anda harus menyetujui pernyataan untuk melanjutkan.' });
+            return;
+        }
+        if (!storeImage && !isResubmitMode) {
+            setMessage({ type: 'error', text: 'Foto tempat usaha wajib diunggah.' });
+            return;
+        }
+
 
         setLoading(true);
+        setMessage({ type: '', text: '' });
 
-        const businessTypeMap = {  
+        const registrationData = new FormData();
+
+        const businessTypeMap = {
             'Jual Beli Kendaraan': 'jual_beli_kendaraan',
             'Jasa Bengkel': 'bengkel',
             'Jasa Cuci Kendaraan': 'cuci_kendaraan',
@@ -174,65 +197,65 @@ const RegisterMitra = ({isResubmitMode = false}) => {
             'Jasa Sewa Kendaraan': 'sewa_kendaraan',
             'Insurance Consultant': 'insurance_consultant',
             'Fasilitas Pembiayaan': 'pembiayaan',
-            'Biro Jasa dan Sekolah Mengemudi': 'biro_jasa', 
+            'Biro Jasa dan Sekolah Mengemudi': 'biro_jasa',
         };
 
-        const businessTypeForApi = businessTypeMap[formData.business_type] || '';
+        const formDataForBackend = { ...formData };
 
+        // Terjemahkan nilai business_type dan pic_status
+        formDataForBackend.business_type = businessTypeMap[formData.business_type];
 
-        const submissionData = { 
-            // Data untuk tabel User
-            name: formData.pic_name,
-            email: formData.owner_email,
-            password: formData.password,
-            phone: formData.pic_phone,
-            // Data untuk tabel Mitra Profile
-            ...formData,
-            owner_address_province: selectedOwnerAddress.province,
-            owner_address_city: selectedOwnerAddress.city,
-            owner_address_subdistrict: selectedOwnerAddress.district,
-            owner_address_village: selectedOwnerAddress.subdistrict,
-            business_type: businessTypeForApi,
-            business_address_province: selectedBusinessAddress.province,
-            business_address_city: selectedBusinessAddress.city,
-            business_address_subdistrict: selectedBusinessAddress.district,
-            business_address_village: selectedBusinessAddress.subdistrict,
-            social_media_platform: socialMediaPlatform,
-            latitude: coordinates.latitude,
-            longitude: coordinates.longitude,
-            referral_code: formData.referral_code.toLowerCase(),
-         };
-        
-        // 5. Tentukan endpoint dan metode secara dinamis
-        const endpoint = isResubmitMode ? '/resubmit' : '/register/mitra';
-        const method = isResubmitMode ? 'put' : 'post';
+        Object.keys(formDataForBackend).forEach(key => {
+            registrationData.append(key, formDataForBackend[key]);
+        });
 
-        //  console.log("--- [DEBUG] Data JSON yang akan dikirim: ---");
-        // console.table(submissionData); // Gunakan console.table untuk tampilan rapi
-        // console.log("------------------------------------------");
+        registrationData.append('owner_address_province', selectedOwnerAddress.province);
+        registrationData.append('owner_address_city', selectedOwnerAddress.city);
+        registrationData.append('owner_address_subdistrict', selectedOwnerAddress.district);
+        registrationData.append('owner_address_village', selectedOwnerAddress.subdistrict);
+
+        registrationData.append('business_address_province', selectedBusinessAddress.province);
+        registrationData.append('business_address_city', selectedBusinessAddress.city);
+        registrationData.append('business_address_subdistrict', selectedBusinessAddress.district);
+        registrationData.append('business_address_village', selectedBusinessAddress.subdistrict);
+
+        // [PERBAIKAN] Hanya kirim koordinat jika valid (bukan null)
+        if (coordinates.latitude !== null && coordinates.longitude !== null) {
+            registrationData.append('latitude', coordinates.latitude);
+            registrationData.append('longitude', coordinates.longitude);
+        }
+
+        registrationData.append('social_media_platform', socialMediaPlatform);
+
+        if (storeImage) {
+            // [PERBAIKAN] Pastikan nama field ini 'store_images' (plural)
+            registrationData.append('store_images', storeImage);
+        }
+
+        console.log("--- DATA YANG DIKIRIM KE BACKEND ---");
+        for (let [key, value] of registrationData.entries()) {
+            console.log(`${key}:`, value);
+        }
+        console.log("------------------------------------");
 
         try {
-            await api[method](endpoint, submissionData);
-            const successMessage = isResubmitMode ? "Data berhasil dikirim ulang!" : "Pendaftaran berhasil!";
-            setMessage({ type: 'success', text: successMessage });
-            
-            localStorage.removeItem('mitraFormData');
-            localStorage.removeItem('mitraOwnerAddress');
-            localStorage.removeItem('mitraBusinessAddress');
-            localStorage.removeItem('mitraSocialPlatform');
-            
-             setTimeout(() => {
+            const endpoint = isResubmitMode ? '/resubmit' : '/register/mitra';
+            const method = isResubmitMode ? 'put' : 'post';
+
+            const response = await api[method](endpoint, registrationData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            setMessage({ type: 'success', text: response.data.message });
+            setTimeout(() => {
                 const destination = isResubmitMode ? '/status' : '/verify-email';
                 navigate(destination);
             }, 2000);
         } catch (error) {
-            setMessage({ type: 'error', text: error.response?.data?.message || 'Terjadi kesalahan.' });
+            setMessage({ type: 'error', text: error.response?.data?.message || 'Terjadi kesalahan saat pendaftaran.' });
         } finally {
             setLoading(false);
         }
     };
-
-
 
     return (
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 py-12 md:py-20">
@@ -248,51 +271,74 @@ const RegisterMitra = ({isResubmitMode = false}) => {
                             <InputField icon="https://icongr.am/feather/user.svg?size=20&color=9ca3af" label="Nama Lengkap PIC" id="pic_name" name="pic_name" value={formData.pic_name} onChange={onInputChange} placeholder="Masukkan nama lengkap PIC" />
                             <InputField icon="https://icongr.am/feather/smartphone.svg?size=20&color=9ca3af" label="Nomor HP / WA PIC" id="pic_phone" name="pic_phone" type="tel" value={formData.pic_phone} onChange={onInputChange} placeholder="081234567890" />
                             <InputField icon="https://icongr.am/feather/mail.svg?size=20&color=9ca3af" label="Email Aktif PIC" id="pic_email" name="pic_email" value={formData.pic_email} onChange={onInputChange} type="email" placeholder="email.pic@contoh.com" />
-                            <InputField 
-                                icon="https://icongr.am/feather/gift.svg?size=20&color=9ca3af" 
-                                label="Kode Referral (Opsional)" 
-                                id="referral_code" 
+                            <InputField
+                                icon="https://icongr.am/feather/gift.svg?size=20&color=9ca3af"
+                                label="Kode Referral (Opsional)"
+                                id="referral_code"
                                 name="referral_code"
-                                value={formData.referral_code} 
-                                onChange={handleInputChange} 
+                                value={formData.referral_code}
+                                onChange={handleInputChange}
                                 placeholder="Masukkan kode referral jika ada"
                                 required={false}
                             />
                             <label className="block text-sm font-medium text-gray-700 mb-2">Status PIC</label>
                             <div className="flex items-center space-x-6 mb-4">
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                                <input 
-                                    type="radio" 
-                                    name="pic_status" 
-                                    value="pengelola" 
-                                    checked={formData.pic_status === 'pengelola'} 
-                                    onChange={handleInputChange} 
-                                    className="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500" 
-                                />
-                                <span>Pengelola</span>
-                            </label>
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                                <input 
-                                    type="radio" 
-                                    name="pic_status" 
-                                    value="pemilik" 
-                                    checked={formData.pic_status === 'pemilik'} 
-                                    onChange={handleInputChange} 
-                                    className="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500" 
-                                />
-                                <span>Pemilik</span>
-                            </label>
-                        </div>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="pic_status"
+                                        value="pengelola"
+                                        checked={formData.pic_status === 'pengelola'}
+                                        onChange={handleInputChange}
+                                        className="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500"
+                                    />
+                                    <span>Pengelola</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="pic_status"
+                                        value="pemilik"
+                                        checked={formData.pic_status === 'pemilik'}
+                                        onChange={handleInputChange}
+                                        className="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500"
+                                    />
+                                    <span>Pemilik</span>
+                                </label>
+                            </div>
                         </FormSection>
 
                         <FormSection title="Data Pemilik Usaha & Akun Login">
                             <InputField icon="https://icongr.am/feather/user.svg?size=20&color=9ca3af" label="Nama Lengkap Pemilik" id="owner_name" name="owner_name" value={formData.owner_name} onChange={onInputChange} placeholder="Masukkan nama lengkap pemilik" />
                             <InputField icon="https://icongr.am/feather/mail.svg?size=20&color=9ca3af" label="Email Aktif Pemilik (untuk Login)" id="owner_email" name="owner_email" value={formData.owner_email} onChange={onInputChange} type="email" placeholder="email.pemilik@contoh.com" />
-     
+
                             {!isResubmitMode && (
                                 <>
                                     <div>
-                                        <InputField icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" label="Password Akun" id="password" name="password" type="password" value={formData.password} onChange={onInputChange} placeholder="Buat password Anda" required={!isResubmitMode} />
+                                        <div className="relative">
+                                            <InputField 
+                                                icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" 
+                                                label="Password Akun" 
+                                                id="password" 
+                                                name="password" 
+                                                type={showPassword ? 'text' : 'password'} // Tipe dinamis
+                                                value={formData.password} 
+                                                onChange={onInputChange} 
+                                                placeholder="Buat password Anda" 
+                                                required={!isResubmitMode} 
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setShowPassword(!showPassword)} 
+                                                className="absolute inset-y-0 right-0 top-7 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                                            >
+                                                {showPassword ? (
+                                                    <img src="https://icongr.am/feather/eye-off.svg?size=20&color=currentColor" alt="Sembunyikan password" />
+                                                ) : (
+                                                    <img src="https://icongr.am/feather/eye.svg?size=20&color=currentColor" alt="Tampilkan password" />
+                                                )}
+                                            </button>
+                                        </div>
                                         <div className="grid grid-cols-2 gap-x-4 mt-2 pl-2">
                                             <PasswordRequirement isValid={passwordValidation.minLength} text="Min. 8 karakter" />
                                             <PasswordRequirement isValid={passwordValidation.hasUpper} text="1 Huruf Kapital" />
@@ -301,7 +347,30 @@ const RegisterMitra = ({isResubmitMode = false}) => {
                                         </div>
                                     </div>
                                     <div>
-                                        <InputField icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" label="Konfirmasi Password" id="confirmPassword" type="password" value={confirmPassword} onChange={onConfirmPasswordChange} placeholder="Ulangi password Anda" hasError={!!passwordError} required={!isResubmitMode} />
+                                        <div className="relative">
+                                            <InputField 
+                                                icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" 
+                                                label="Konfirmasi Password" 
+                                                id="confirmPassword" 
+                                                type={showConfirmPassword ? 'text' : 'password'} // Tipe dinamis
+                                                value={confirmPassword} 
+                                                onChange={onConfirmPasswordChange} 
+                                                placeholder="Ulangi password Anda" 
+                                                hasError={!!passwordError} 
+                                                required={!isResubmitMode} 
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
+                                                className="absolute inset-y-0 right-0 top-7 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                                            >
+                                                {showConfirmPassword ? (
+                                                    <img src="https://icongr.am/feather/eye-off.svg?size=20&color=currentColor" alt="Sembunyikan password" />
+                                                ) : (
+                                                    <img src="https://icongr.am/feather/eye.svg?size=20&color=currentColor" alt="Tampilkan password" />
+                                                )}
+                                            </button>
+                                        </div>
                                         {passwordError && <p className="text-red-500 text-xs mt-1 ml-1">{passwordError}</p>}
                                     </div>
                                 </>
@@ -310,7 +379,7 @@ const RegisterMitra = ({isResubmitMode = false}) => {
 
                             <InputField icon="https://icongr.am/feather/smartphone.svg?size=20&color=9ca3af" label="Nomor HP / WA Pemilik" id="owner_phone" name="owner_phone" type="tel" value={formData.owner_phone} onChange={onInputChange} placeholder="081234567890" />
                             <InputField icon="https://icongr.am/feather/file-text.svg?size=20&color=9ca3af" label="No. KTP Pemilik" id="owner_ktp" name="owner_ktp" type="tel" value={formData.owner_ktp} onChange={onInputChange} placeholder="Masukkan 16 digit nomor KTP" />
-                            
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Alamat Pemilik Sesuai KTP</label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -322,7 +391,7 @@ const RegisterMitra = ({isResubmitMode = false}) => {
                                 <textarea name="owner_address_detail" value={formData.owner_address_detail} onChange={onInputChange} placeholder="Detail alamat: Nama Jalan, RT/RW, Gedung/No. Rumah" className="mt-4 block w-full px-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg shadow-sm" rows="3"></textarea>
                             </div>
                         </FormSection>
-                        
+
                         <FormSection title="Data Jenis Usaha">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Jenis Usaha Barang / Jasa</label>
@@ -335,59 +404,64 @@ const RegisterMitra = ({isResubmitMode = false}) => {
                                     ))}
                                 </div>
                             </div>
-                           <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Bentuk Usaha</label>
-                        <div className="flex items-center space-x-6 mb-4">
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                                <input 
-                                    type="radio" 
-                                    name="business_entity" 
-                                    value="perorangan" 
-                                    checked={formData.business_entity === 'perorangan'} 
-                                    onChange={handleInputChange} 
-                                    className="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500" 
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Bentuk Usaha</label>
+                                <div className="flex items-center space-x-6 mb-4">
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="business_entity"
+                                            value="perorangan"
+                                            checked={formData.business_entity === 'perorangan'}
+                                            onChange={handleInputChange}
+                                            className="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500"
+                                        />
+                                        <span>Perorangan</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="business_entity"
+                                            value="berbadan_usaha"
+                                            checked={formData.business_entity === 'berbadan_usaha'}
+                                            onChange={handleInputChange}
+                                            className="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500"
+                                        />
+                                        <span>Berbadan Usaha</span>
+                                    </label>
+                                </div>
+                                {formData.business_entity === 'berbadan_usaha' && (
+                                    <InputField
+                                        icon="https://icongr.am/feather/home.svg?size=20&color=9ca3af"
+                                        label="Nama Badan Usaha"
+                                        id="business_name"
+                                        name="business_name"
+                                        value={formData.business_name}
+                                        onChange={handleInputChange}
+                                        placeholder="Contoh: PT. Maju Jaya"
+                                        required={true}
+                                    />
+                                )}
+                                <div className='mb-6'></div>
+                                <ImageUpload
+                                    onFileChange={onFileChange}
+                                    previewSrc={storeImagePreview}
+                                    isRequired={!isResubmitMode}
+                                    title='Foto Tampak Depan Usaha'
                                 />
-                                <span>Perorangan</span>
-                            </label>
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                                <input 
-                                    type="radio" 
-                                    name="business_entity" 
-                                    value="berbadan_usaha" 
-                                    checked={formData.business_entity === 'berbadan_usaha'} 
-                                    onChange={handleInputChange} 
-                                    className="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500" 
-                                />
-                                <span>Berbadan Usaha</span>
-                            </label>
-                        </div>
-                        
-                        {/* Input ini hanya akan muncul jika 'Berbadan Usaha' dipilih */}
-                        {formData.business_entity === 'berbadan_usaha' && (
-                            <InputField 
-                                icon="https://icongr.am/feather/home.svg?size=20&color=9ca3af" 
-                                label="Nama Badan Usaha" 
-                                id="business_name" 
-                                name="business_name" 
-                                value={formData.business_name} 
-                                onChange={handleInputChange} 
-                                placeholder="Contoh: PT. Maju Jaya" 
-                                required={true}
-                            />
-                        )}
-                    </div>
+                            </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Alamat Lengkap Usaha</label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                     <SelectField name="province" value={selectedBusinessAddress.province} onChange={handleBusinessAddressChange}><option value="">Pilih Provinsi</option>{businessAddressOptions.provinces.map(p => <option key={p.province} value={p.province}>{p.province}</option>)}</SelectField>
-                                     <SelectField name="city" value={selectedBusinessAddress.city} onChange={handleBusinessAddressChange} disabled={!selectedBusinessAddress.province}><option value="">Pilih Kota/Kabupaten</option>{businessAddressOptions.cities.map(c => <option key={c.city} value={c.city}>{c.city}</option>)}</SelectField>
-                                     <SelectField name="district" value={selectedBusinessAddress.district} onChange={handleBusinessAddressChange} disabled={!selectedBusinessAddress.city}><option value="">Pilih Kecamatan</option>{businessAddressOptions.districts.map(d => <option key={d.district} value={d.district}>{d.district}</option>)}</SelectField>
-                                     <SelectField name="subdistrict" value={selectedBusinessAddress.subdistrict} onChange={handleBusinessAddressChange} disabled={!selectedBusinessAddress.district}><option value="">Pilih Kelurahan/Desa</option>{businessAddressOptions.subdistricts.map(s => <option key={s.subdistrict} value={s.subdistrict}>{s.subdistrict}</option>)}</SelectField>
+                                    <SelectField name="province" value={selectedBusinessAddress.province} onChange={handleBusinessAddressChange}><option value="">Pilih Provinsi</option>{businessAddressOptions.provinces.map(p => <option key={p.province} value={p.province}>{p.province}</option>)}</SelectField>
+                                    <SelectField name="city" value={selectedBusinessAddress.city} onChange={handleBusinessAddressChange} disabled={!selectedBusinessAddress.province}><option value="">Pilih Kota/Kabupaten</option>{businessAddressOptions.cities.map(c => <option key={c.city} value={c.city}>{c.city}</option>)}</SelectField>
+                                    <SelectField name="district" value={selectedBusinessAddress.district} onChange={handleBusinessAddressChange} disabled={!selectedBusinessAddress.city}><option value="">Pilih Kecamatan</option>{businessAddressOptions.districts.map(d => <option key={d.district} value={d.district}>{d.district}</option>)}</SelectField>
+                                    <SelectField name="subdistrict" value={selectedBusinessAddress.subdistrict} onChange={handleBusinessAddressChange} disabled={!selectedBusinessAddress.district}><option value="">Pilih Kelurahan/Desa</option>{businessAddressOptions.subdistricts.map(s => <option key={s.subdistrict} value={s.subdistrict}>{s.subdistrict}</option>)}</SelectField>
                                 </div>
                                 <textarea name="business_address_detail" value={formData.business_address_detail} onChange={handleInputChange} placeholder="Detail alamat: Nama Jalan, RT/RW, Gedung/No. Rumah" className="mt-4 block w-full px-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg shadow-sm" rows="3"></textarea>
                             </div>
                             <InputField icon="https://icongr.am/feather/clock.svg?size=20&color=9ca3af" label="Lama Usaha" id="business_duration" name="business_duration" value={formData.business_duration} onChange={handleInputChange} placeholder="Contoh: 5 Tahun" />
-                             <div>
+                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Sosial Media Badan Usaha</label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <SelectField value={socialMediaPlatform} onChange={(e) => setSocialMediaPlatform(e.target.value)}><option value="">Pilih Platform</option><option>Instagram</option><option>Facebook</option><option>Website</option></SelectField>
@@ -404,9 +478,9 @@ const RegisterMitra = ({isResubmitMode = false}) => {
                         </FormSection>
 
                         <div className="text-center pt-6">
-                            {message.text && ( <div className={`mb-4 p-4 rounded-lg text-center ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{message.text}</div> )}
+                            {message.text && (<div className={`mb-4 p-4 rounded-lg text-center ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{message.text}</div>)}
                             <button type="submit" disabled={loading} className="w-full md:w-1/2 px-12 py-4 text-center font-semibold text-white bg-orange-500 rounded-lg shadow-lg hover:bg-orange-600 disabled:bg-gray-400">
-                                 {loading ? 'Mengirim...' : (isResubmitMode ? 'KIRIM ULANG PENDAFTARAN' : 'KIRIM PENDAFTARAN')}
+                                {loading ? 'Mengirim...' : (isResubmitMode ? 'KIRIM ULANG PENDAFTARAN' : 'KIRIM PENDAFTARAN')}
                             </button>
                         </div>
                     </form>

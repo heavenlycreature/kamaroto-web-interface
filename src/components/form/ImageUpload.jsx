@@ -1,10 +1,10 @@
 import React, { useRef } from 'react';
 
-const ImageUpload = ({ onFileChange, previewSrc, isRequired }) => {
+const ImageUpload = ({ onFileChange, previewSrc, isRequired, title }) => {
     const fileInputRef = useRef(null);
     return (
         <div>
-            <label htmlFor="selfie-upload" className="block text-sm font-medium text-gray-700">Foto Selfie di Depan Rumah</label>
+            <label htmlFor="selfie-upload" className="block text-sm font-medium text-gray-700">{title}</label>
             <div onClick={() => fileInputRef.current.click()} className="mt-2 flex justify-center items-center w-full h-64 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer overflow-hidden">
                 <input id="selfie-upload" name="selfie_image" ref={fileInputRef} type="file" onChange={onFileChange} className="hidden" accept="image/*" required={isRequired} />
                 <div className="text-center w-full h-full flex items-center justify-center">

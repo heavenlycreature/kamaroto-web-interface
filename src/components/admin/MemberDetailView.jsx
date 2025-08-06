@@ -57,6 +57,7 @@ const MemberDetailView = ({ member, type, onBack, onApprove, onReject, showAppro
                         <DetailRow label="Nama Lengkap" value={profile.name} />
                         <DetailRow label="Email" value={profile.email} />
                         <DetailRow label="Nomor HP" value={member.phone} />
+                        <DetailRow label="Nomor KTP" value={profile.nik} />
                         <DetailRow label="Tempat & Tanggal Lahir" value={`${profile.birth_place || ''}, ${formatDate(profile.birth_date)}`} />
                         <DetailRow label="Jenis Kelamin" value={profile.gender} />
                         <DetailRow label="Alamat" value={`${profile.address_detail}, ${profile.address_village}, ${profile.address_subdistrict}, ${profile.address_city}, ${profile.address_province}`} />
@@ -79,9 +80,23 @@ const MemberDetailView = ({ member, type, onBack, onApprove, onReject, showAppro
                         <DetailRow label="Email PIC" value={profile.pic_email} />
                         <DetailRow label="Nomor HP PIC" value={profile.pic_phone} />
                         <DetailRow label="Nama Pemilik" value={profile.owner_name} />
+                        <DetailRow label="Email Pemilik" value={profile.owner_email} />
+                        <DetailRow label="Nomor HP Pemilik" value={profile.owner_phone} />
+                        <DetailRow label="Alamat Pemilik" value={`${profile.owner_address_detail}, ${profile.owner_address_village}, ${profile.owner_address_subdistrict}, ${profile.owner_address_city}, ${profile.owner_address_province}`} />
+                        <DetailRow label="Tanggal Bergabung" value={formatDate(member.created_at)} />
                         <DetailRow label="Jenis Usaha" value={profile.business_type} />
                         <DetailRow label="Nama Badan Usaha" value={profile.business_entity} />
                         <DetailRow label="Alamat Usaha" value={`${profile.owner_address_detail}, ${profile.owner_address_village}, ${profile.owner_address_subdistrict}, ${profile.owner_address_city}, ${profile.owner_address_province}`} />
+                        <div className="py-3">
+                            <dt className="text-sm font-medium text-slate-500 mb-2">Foto Tempat Usaha</dt>
+                            <dd>
+                                {profile.store_images ? (
+                                    <img src={`http://localhost:3000${profile.store_images}`} alt="Foto Usaha" className="rounded-lg max-w-xs border" />
+                                ) : (
+                                    <p className="text-slate-400 italic">Gambar tidak tersedia.</p>
+                                )}
+                            </dd>
+                        </div>
                     </dl>
                 )}
             </main>
