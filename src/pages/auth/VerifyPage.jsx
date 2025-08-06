@@ -1,5 +1,5 @@
 // src/pages/auth/VerifyPage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import api from '../../api/api'; // Pastikan path ini benar
 
@@ -7,14 +7,23 @@ const VerifyPage = () => {
     const [searchParams] = useSearchParams();
     const [message, setMessage] = useState('Sedang memverifikasi email Anda...');
     const [isSuccess, setIsSuccess] = useState(false);
+    const verificationAttempted = useRef(false);
 
     useEffect(() => {
+         if (verificationAttempted.current) {
+            return;
+        }
+        verificationAttempted.current = true;
         const token = searchParams.get('token');
         if (token) {
             api.get(`/verify-email?token=${token}`)
                 .then(response => {
                     setMessage(response.data.message);
                     setIsSuccess(true);
+            
+                    setTimeout(() => {
+                        navigate('/login');
+                    }, 3000);
                 })
                 .catch(error => {
                     setMessage(error.response?.data?.message || 'Verifikasi gagal. Silakan coba lagi.');

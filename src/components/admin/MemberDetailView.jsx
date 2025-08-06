@@ -85,7 +85,7 @@ const MemberDetailView = ({ member, type, onBack, onApprove, onReject, showAppro
                         <DetailRow label="Alamat Pemilik" value={`${profile.owner_address_detail}, ${profile.owner_address_village}, ${profile.owner_address_subdistrict}, ${profile.owner_address_city}, ${profile.owner_address_province}`} />
                         <DetailRow label="Tanggal Bergabung" value={formatDate(member.created_at)} />
                         <DetailRow label="Jenis Usaha" value={profile.business_type} />
-                        <DetailRow label="Nama Badan Usaha" value={profile.business_entity} />
+                        <DetailRow label="Nama Badan Usaha" value={profile.business_name || "-"} />
                         <DetailRow label="Alamat Usaha" value={`${profile.owner_address_detail}, ${profile.owner_address_village}, ${profile.owner_address_subdistrict}, ${profile.owner_address_city}, ${profile.owner_address_province}`} />
                         <div className="py-3">
                             <dt className="text-sm font-medium text-slate-500 mb-2">Foto Tempat Usaha</dt>
