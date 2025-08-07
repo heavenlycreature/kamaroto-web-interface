@@ -30,6 +30,8 @@ import ReferredUsersPage from './pages/captain/ReferredUserPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import CheckEmailPage from './pages/auth/CheckEmailPage';
 import VerifyPage from './pages/auth/VerifyPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 
 export const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
@@ -117,6 +119,8 @@ function App() {
               <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
               <Route path="/register/captain" element={<GuestRoute><RegisterCaptain /></GuestRoute>} />
               <Route path="/register/mitra" element={<GuestRoute><RegisterMitra /></GuestRoute>} />
+              <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
+              <Route path="/reset-password" element={<GuestRoute><ResetPasswordPage /></GuestRoute>} />
 
               {/* --- Rute Terproteksi (Hanya Bisa Diakses Jika Sudah Login) --- */}
 
