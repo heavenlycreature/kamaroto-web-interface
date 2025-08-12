@@ -76,46 +76,62 @@ const MembershipPage = () => {
         { key: 'mitra', label: 'Mitra' }
     ];
 
+     const businessTypeMap = {
+        'jual_beli_kendaraan': 'Jual Beli Kendaraan',
+        'bengkel': 'Jasa Bengkel',
+        'cuci_kendaraan': 'Jasa Cuci Kendaraan',
+        'jual_beli_sparepart': 'Jual Beli Sparepart',
+        'sewa_kendaraan': 'Jasa Sewa Kendaraan',
+        'insurance_consultant': 'Insurance Consultant',
+        'pembiayaan': 'Fasilitas Pembiayaan',
+        'biro_jasa': 'Biro Jasa dan Sekolah Mengemudi',
+    };
+
     const tableHeaders = [
         `Nama ${activeTab === 'captain' ? 'Captain' : 'Mitra'}`,
         'Jenis',
+        'Direferensikan Oleh', // Header baru
         'Tanggal Bergabung',
         'Aksi'
     ];
 
-    // --- 3. Buat fungsi `renderRow` untuk "menyuntikkan" JSX ke dalam DataTable ---
-    const renderMemberRow = (member) => (
-        <tr key={member.id} className="bg-white border-b hover:bg-slate-50">
-            <td className="px-6 py-4 font-medium text-slate-900">
-                <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600">
-                        {member.name?.charAt(0) || '?'}
-                    </div>
-                    <div>
-                        <div>{member.name}</div>
-                        <div className="text-xs text-slate-500">{member.email}</div>
-                    </div>
-                </div>
-            </td>
-            <td className="px-6 py-4">{activeTab === 'captain' ? 'Captain Officer' : member.mitraProfile?.business_type || 'N/A'}</td>
-            <td className="px-6 py-4">
-                {member.referrer ? (
-                    <div>
-                        <div className="font-medium text-slate-800">{member.referrer.name}</div>
-                        <div className="text-xs text-slate-500">{member.referrer.email}</div>
-                    </div>
-                ) : (
-                    <span className="text-slate-400">-</span>
-                )}
-            </td>
-            <td className="px-6 py-4">{formatDate(member.created_at)}</td>
-            <td className="px-6 py-4 text-center space-x-2">
-                <button onClick={() => handleDetailClick(member)} className="cursor-pointer font-semibold text-blue-600 hover:text-blue-800 px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 transition-colors">Detail</button>
-                <button className="cursor-pointer font-semibold text-red-600 hover:text-red-800 px-3 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 transition-colors">Hapus</button>
-            </td>
-        </tr>
-    );
 
+   const renderMemberRow = (member) => {
+        const businessTypeText = member.mitraProfile?.business_type;
+        const formattedType = businessTypeMap[businessTypeText] || businessTypeText || 'N/A';
+
+        return (
+            <tr key={member.id} className="bg-white border-b hover:bg-slate-50">
+                <td className="px-6 py-4 font-medium text-slate-900">
+                    <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600">
+                            {member.name?.charAt(0) || '?'}
+                        </div>
+                        <div>
+                            <div>{member.name}</div>
+                            <div className="text-xs text-slate-500">{member.email}</div>
+                        </div>
+                    </div>
+                </td>
+                <td className="px-6 py-4">{activeTab === 'captain' ? 'Captain Officer' : formattedType}</td>
+                <td className="px-6 py-4">
+                    {member.referrer ? (
+                        <div>
+                            <div className="font-medium text-slate-800">{member.referrer.name}</div>
+                            <div className="text-xs text-slate-500">{member.referrer.email}</div>
+                        </div>
+                    ) : (
+                        <span className="text-slate-400">-</span>
+                    )}
+                </td>
+                <td className="px-6 py-4">{formatDate(member.created_at)}</td>
+                <td className="px-6 py-4 text-center space-x-2">
+                    <button onClick={() => handleDetailClick(member)} className="cursor-pointer font-semibold text-blue-600 hover:text-blue-800 px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 transition-colors">Detail</button>
+                    <button className="cursor-pointer font-semibold text-red-600 hover:text-red-800 px-3 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 transition-colors">Hapus</button>
+                </td>
+            </tr>
+        );
+    };
     return (
         <div className="bg-slate-100 min-h-screen">
             <div className="md:flex md:min-h-screen">

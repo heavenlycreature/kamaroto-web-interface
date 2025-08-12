@@ -20,6 +20,17 @@ const MemberDetailView = ({ member, type, onBack, onApprove, onReject, showAppro
     // Menggunakan data dari 'member' sebagai fallback jika 'profile' tidak ada
     const displayName = profile?.name || member.name;
 
+     const businessTypeMap = {
+        'jual_beli_kendaraan': 'Jual Beli Kendaraan',
+        'bengkel': 'Jasa Bengkel',
+        'cuci_kendaraan': 'Jasa Cuci Kendaraan',
+        'jual_beli_sparepart': 'Jual Beli Sparepart',
+        'sewa_kendaraan': 'Jasa Sewa Kendaraan',
+        'insurance_consultant': 'Insurance Consultant',
+        'pembiayaan': 'Fasilitas Pembiayaan',
+        'biro_jasa': 'Biro Jasa dan Sekolah Mengemudi',
+    };
+
     return (
         <div className="bg-white rounded-2xl shadow-lg">
             <header className="p-6 border-b border-slate-200 flex items-center space-x-4">
@@ -86,7 +97,10 @@ const MemberDetailView = ({ member, type, onBack, onApprove, onReject, showAppro
                         <DetailRow label="Nomor HP Pemilik" value={profile.owner_phone} />
                         <DetailRow label="Alamat Pemilik" value={`${profile.owner_address_detail}, ${profile.owner_address_village}, ${profile.owner_address_subdistrict}, ${profile.owner_address_city}, ${profile.owner_address_province}`} />
                         <DetailRow label="Tanggal Bergabung" value={formatDate(member.created_at)} />
-                        <DetailRow label="Jenis Usaha" value={profile.business_type} />
+                         <DetailRow 
+                            label="Jenis Usaha" 
+                            value={businessTypeMap[profile.business_type] || profile.business_type} 
+                        />
                         <DetailRow label="Nama Badan Usaha" value={profile.business_name || "-"} />
                         <DetailRow label="Alamat Usaha" value={`${profile.owner_address_detail}, ${profile.owner_address_village}, ${profile.owner_address_subdistrict}, ${profile.owner_address_city}, ${profile.owner_address_province}`} />
                         <div className="py-3">

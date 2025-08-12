@@ -1,6 +1,3 @@
-// src/components/common/DataTable.jsx
-// Komponen tabel dinamis yang dapat digunakan kembali.
-
 import React from 'react';
 
 const DataTable = ({
