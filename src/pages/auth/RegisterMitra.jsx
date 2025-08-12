@@ -15,6 +15,7 @@ import { usePasswordValidation } from '../../hooks/usePasswordValidation';
 import { InputField, SelectField } from '../../components/form/FormElements';
 import FormSection from '../../components/form/FormSection';
 import ImageUpload from '../../components/form/ImageUpload';
+import PasswordInput from "../../components/form/PasswordInput";
 
 // Komponen kecil untuk menampilkan syarat password
 const PasswordRequirement = ({ isValid, text }) => (
@@ -73,7 +74,7 @@ const RegisterMitra = ({ isResubmitMode = false }) => {
 
             const fetchMyProfile = async () => {
                 try {
-                    const response = await api.get(`/profile/me/${location.state.userId}`);
+                    const response = await api.get(`/profile/me`);
                     const profileData = response.data;
                     const mitraProfile = profileData.mitraProfile;
 
@@ -125,6 +126,9 @@ const RegisterMitra = ({ isResubmitMode = false }) => {
                         });
 
                         setSocialMediaPlatform(mitraProfile.social_media_platform);
+                    }
+                    if (mitraProfile?.store_images) {
+                        setStoreImagePreview(`http://localhost:3000${mitraProfile.store_images}`);
                     }
                 } catch (error) {
                     console.error("Gagal memuat data untuk pendaftaran ulang Mitra:", error);
@@ -314,54 +318,32 @@ const RegisterMitra = ({ isResubmitMode = false }) => {
 
                             {!isResubmitMode && (
                                 <>
+                                    <PasswordInput
+                                        label="Password"
+                                        id="password"
+                                        name="password"
+                                        value={formData.password}
+                                        onChange={onInputChange}
+                                        placeholder="Buat password Anda"
+                                        passwordValidation={passwordValidation}
+                                        required={!isResubmitMode}
+                                    />
                                     <div>
                                         <div className="relative">
-                                            <InputField 
-                                                icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" 
-                                                label="Password Akun" 
-                                                id="password" 
-                                                name="password" 
-                                                type={showPassword ? 'text' : 'password'} // Tipe dinamis
-                                                value={formData.password} 
-                                                onChange={onInputChange} 
-                                                placeholder="Buat password Anda" 
-                                                required={!isResubmitMode} 
-                                            />
-                                            <button 
-                                                type="button" 
-                                                onClick={() => setShowPassword(!showPassword)} 
-                                                className="absolute inset-y-0 right-0 top-7 flex items-center pr-3 text-gray-400 hover:text-gray-600"
-                                            >
-                                                {showPassword ? (
-                                                    <img src="https://icongr.am/feather/eye-off.svg?size=20&color=currentColor" alt="Sembunyikan password" />
-                                                ) : (
-                                                    <img src="https://icongr.am/feather/eye.svg?size=20&color=currentColor" alt="Tampilkan password" />
-                                                )}
-                                            </button>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-x-4 mt-2 pl-2">
-                                            <PasswordRequirement isValid={passwordValidation.minLength} text="Min. 8 karakter" />
-                                            <PasswordRequirement isValid={passwordValidation.hasUpper} text="1 Huruf Kapital" />
-                                            <PasswordRequirement isValid={passwordValidation.hasNumber} text="1 Angka" />
-                                            <PasswordRequirement isValid={passwordValidation.hasSymbol} text="1 Simbol" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="relative">
-                                            <InputField 
-                                                icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af" 
-                                                label="Konfirmasi Password" 
-                                                id="confirmPassword" 
+                                            <InputField
+                                                icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af"
+                                                label="Konfirmasi Password"
+                                                id="confirmPassword"
                                                 type={showConfirmPassword ? 'text' : 'password'} // Tipe dinamis
-                                                value={confirmPassword} 
-                                                onChange={onConfirmPasswordChange} 
-                                                placeholder="Ulangi password Anda" 
-                                                hasError={!!passwordError} 
-                                                required={!isResubmitMode} 
+                                                value={confirmPassword}
+                                                onChange={onConfirmPasswordChange}
+                                                placeholder="Ulangi password Anda"
+                                                hasError={!!passwordError}
+                                                required={!isResubmitMode}
                                             />
-                                            <button 
-                                                type="button" 
-                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                                 className="absolute inset-y-0 right-0 top-7 flex items-center pr-3 text-gray-400 hover:text-gray-600"
                                             >
                                                 {showConfirmPassword ? (

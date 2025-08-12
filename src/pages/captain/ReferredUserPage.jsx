@@ -114,8 +114,8 @@ const ReferredUsersPage = () => {
 
     // Link navigasi untuk sidebar
     const captainNavLinks = [
-        { to: '/captain/profile', label: 'Profil Saya', icon: <img src="https://icongr.am/feather/user.svg?size=20&color=currentColor" alt="Profil"/> },
-        { to: '/captain/recruits', label: 'Rekrutan Saya', icon: <img src="https://icongr.am/feather/users.svg?size=20&color=currentColor" alt="Rekrutan"/> },
+        { to: '/captain/profile', label: 'Profil Saya', icon: <img src="https://icongr.am/feather/user.svg?size=20&color=ffffff" alt="Profil"/> },
+        { to: '/captain/recruits', label: 'Rekrutan Saya', icon: <img src="https://icongr.am/feather/users.svg?size=20&color=ffffff" alt="Rekrutan"/> },
     ];
 
     return (

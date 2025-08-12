@@ -17,7 +17,7 @@ const StatCard = ({ title, value, icon, gradient, linkTo }) => (
                 <p className="text-base font-medium opacity-90">{title}</p>
                 <p className="text-5xl font-bold mt-1">{value}</p>
             </div>
-            <div className="p-4 bg-white bg-opacity-20 rounded-full">
+            <div className="p-4 rounded-full">
                 {icon}
             </div>
         </div>

@@ -19,7 +19,7 @@ const ProfileSidebar = ({ user, navLinks, isOpen, setIsOpen }) => {
     return (
         <>
             <div 
-                className={`fixed inset-0 bg-black bg-opacity-40 z-30 md:hidden transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                className={`fixed inset-0 z-30 md:hidden transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                 onClick={() => setIsOpen(false)}
             ></div>
 

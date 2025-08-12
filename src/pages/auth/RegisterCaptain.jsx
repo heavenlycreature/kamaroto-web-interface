@@ -12,6 +12,7 @@ import { useFormHandlers } from '../../hooks/useFormHandlers';
 import { InputField, SelectField } from "../../components/form/FormElements";
 import FormSection from "../../components/form/FormSection";
 import ImageUpload from "../../components/form/ImageUpload";
+import PasswordInput from "../../components/form/PasswordInput";
 
 const PasswordRequirement = ({ isValid, text }) => (
     <p className={`text-sm ${isValid ? 'text-green-600' : 'text-gray-500'}`}>
@@ -104,6 +105,7 @@ const RegisterCaptain = ({ isResubmitMode = false }) => {
                         address_detail: profileData.coProfile.address_detail,
                         gender: profileData.coProfile.gender,
                         password: '', // Password dikosongkan untuk keamanan
+                        referral_code: profileData.coProfile.referral_code || '',
                         agreement: false,
                     });
 
@@ -278,39 +280,16 @@ const RegisterCaptain = ({ isResubmitMode = false }) => {
                             <InputField icon="https://icongr.am/feather/mail.svg?size=20&color=9ca3af" label="Email Aktif" id="email" type="email" value={formData.email} onChange={onInputChange} hasError={errorField === 'email'} placeholder="email@contoh.com" />
                             {!isResubmitMode && (
                                 <>
-                                    <div>
-                                        {/* [PERUBAHAN] Bungkus InputField Password dengan div relative */}
-                                        <div className="relative">
-                                            <InputField
-                                                icon="https://icongr.am/feather/lock.svg?size=20&color=9ca3af"
-                                                label="Password"
-                                                id="password"
-                                                type={showPassword ? 'text' : 'password'}
-                                                value={formData.password}
-                                                onChange={onInputChange}
-                                                placeholder="Buat password Anda"
-                                                hasError={errorField === 'password'}
-                                                required={!isResubmitMode}
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute inset-y-0 right-0 top-7 flex items-center pr-3 text-gray-400 hover:text-gray-600"
-                                            >
-                                                {showPassword ? (
-                                                    <img src="https://icongr.am/feather/eye-off.svg?size=20&color=currentColor" alt="Sembunyikan password" />
-                                                ) : (
-                                                    <img src="https://icongr.am/feather/eye.svg?size=20&color=currentColor" alt="Tampilkan password" />
-                                                )}
-                                            </button>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-x-4 mt-2 pl-2">
-                                            <PasswordRequirement isValid={passwordValidation.minLength} text="Min. 8 karakter" />
-                                            <PasswordRequirement isValid={passwordValidation.hasUpper} text="1 Huruf Kapital" />
-                                            <PasswordRequirement isValid={passwordValidation.hasNumber} text="1 Angka" />
-                                            <PasswordRequirement isValid={passwordValidation.hasSymbol} text="1 Simbol" />
-                                        </div>
-                                    </div>
+                                    <PasswordInput
+                                        label="Password"
+                                        id="password"
+                                        name="password"
+                                        value={formData.password}
+                                        onChange={onInputChange}
+                                        placeholder="Buat password Anda"
+                                        passwordValidation={passwordValidation}
+                                        required={!isResubmitMode}
+                                    />
                                     <div>
                                         <div className="relative">
                                             <InputField

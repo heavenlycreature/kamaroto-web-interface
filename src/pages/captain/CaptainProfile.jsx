@@ -19,12 +19,12 @@ const captainNavLinks = [
     { 
         to: '/captain/profile', 
         label: 'Profil Saya', 
-        icon: <img src="https://icongr.am/feather/user.svg?size=20&color=currentColor" alt="Profil"/> 
+        icon: <img src="https://icongr.am/feather/user.svg?size=20&color=ffffff" alt="Profil"/> 
     },
     { 
         to: '/captain/recruits', // <-- Ubah path ke halaman baru
         label: 'Rekrutan Saya',   // <-- Ubah label
-        icon: <img src="https://icongr.am/feather/users.svg?size=20&color=currentColor" alt="Rekrutan"/> // <-- Ikon baru yang lebih sesuai
+        icon: <img src="https://icongr.am/feather/users.svg?size=20&color=ffffff" alt="Rekrutan"/> // <-- Ikon baru yang lebih sesuai
     },
 ];
 
