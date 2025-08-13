@@ -32,6 +32,10 @@ import CheckEmailPage from './pages/auth/CheckEmailPage';
 import VerifyPage from './pages/auth/VerifyPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import JoinUs from './pages/JoinUs';
+import GabCo from './pages/GabCo';
+import GabMi from './pages/GabMi';
+import ScrollToTop from './components/ScrollToTop';
 
 export const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
@@ -102,17 +106,22 @@ function App() {
 
 
   return (
-    <AuthContext.Provider value={authContextValue}>
-      <Router>
-        <div className="flex flex-col min-h-screen">
-          <Navbar />
-          <main className="flex-grow">
-            <Routes>
-              {/* --- Rute Publik --- */}
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/verify-email" element={<CheckEmailPage />} />
-              <Route path="/verify" element={<VerifyPage />} />
+
+    <AuthContext.Provider value={ authContextValue }>
+    <Router>
+      <ScrollToTop />
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow">
+          <Routes>
+            {/* --- Rute Publik --- */}
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/verify-email" element={<CheckEmailPage />} />
+            <Route path="/verify" element={<VerifyPage />} />
+            <Route path="/gabung" element={<JoinUs />} />
+            <Route path="/gabco" element={<GabCo />} />
+            <Route path="/gabmi" element={<GabMi />} />
 
               {/* --- Rute Khusus Tamu (Tidak Bisa Diakses Jika Sudah Login) --- */}
               <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
