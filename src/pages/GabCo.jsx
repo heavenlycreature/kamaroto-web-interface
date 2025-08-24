@@ -95,6 +95,7 @@ const GabCo = () => {
                                     <li>Mendapatkan Training Pengembangan Diri secara gratis</li>
                                     <li>Mendapatkan Tunjangan Asuransi Jiwa dan Kesehatan</li>
                                     <li>Mendapatkan Hak Eksklusif Profesi di radius teritorinya</li>
+                                    <li>Mendapatkan satu unit motor listrik </li>
                                 </ol>
                                 </AnimatedElement>
                                 
