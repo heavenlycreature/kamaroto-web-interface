@@ -56,7 +56,7 @@ const JoinUs = () => {
                                 <p className="text-gray-300 mb-4">Captain Officer memadukan profesionalisme dengan semangat muda untuk menghadirkan energi baru dalam dunia bisnis otomotif. Mereka berasal dari berbagai latar belakang berbeda mulai dari pengemudi online, staf marketing, hingga mahasiswa yang memiliki satu tujuan yang sama untuk mendorong pertumbuhan dan memperluas jaringan.</p>
                                 <p className="text-gray-300">Dalam perannya, Captain Officer tidak hanya menjalankan tugas harian. Mereka berinteraksi langsung dengan mitra, membangun hubungan yang saling menguntungkan, serta membuka peluang bisnis baru di wilayahnya. Dengan fleksibilitas dan jiwa kepemimpinan, mereka menjadi jembatan antara pelanggan dan layanan berkualitas.</p>
                                 <div className="mt-8">
-                                    <ActionButton to="/gabco" isLink={true}>Selengkapnya</ActionButton>
+                                    <ActionButton to="/gabung/co" isLink={true}>Selengkapnya</ActionButton>
                                 </div>
                             </div>
                             {/* --- PERUBAHAN DI SINI --- */}
@@ -76,7 +76,7 @@ const JoinUs = () => {
                                 <p className="text-gray-300 mb-4">Mitra Bisnis adalah pelaku usaha yang memanfaatkan jaringan dan platform pemasaran kami untuk memasarkan produk atau jasa mereka secara lebih luas. Memiliki tujuan jelas untuk memperluas pasar, meningkatkan penjualan, dan memperkuat citra brand di mata konsumen.</p>
                                 <p className="text-gray-300">Dengan bergabung sebagai mitra, Anda tidak hanya terhubung ke komunitas yang sudah terbentuk, tetapi juga mendapatkan dukungan promosi digital yang efektif serta akses ke calon pelanggan yang sudah tertarget. Semua ini dirancang untuk membantu usaha Anda tumbuh lebih cepat dan menjangkau pasar yang sebelumnya sulit diraih.</p>
                                 <div className="mt-8">
-                                    <ActionButton to="/gabmi" isLink={true}>Selengkapnya</ActionButton>
+                                    <ActionButton to="/gabung/mitra" isLink={true}>Selengkapnya</ActionButton>
                                 </div>
                             </div>
                              {/* --- PERUBAHAN DI SINI --- */}

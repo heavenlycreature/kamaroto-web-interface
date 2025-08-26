@@ -11,6 +11,7 @@ import InfoCard from '../../components/profile/InfoCard';
 import ChangePasswordModal from '../../components/profile/ChangePasswordModal';
 import RejectedStatusView from '../../components/profile/RejectedStatusView';
 import { useAddressDropdown } from '../../hooks/useAddressDropdown';
+import { SelectField } from '../../components/form/FormElements';
 
 // --- Komponen Ikon ---
 const MenuIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>;
@@ -38,13 +39,14 @@ const CaptainProfile = () => {
     const [error, setError] = useState(null);
     const [saveMessage, setSaveMessage] = useState({ type: '', text: '' });
     const navigate = useNavigate();
-
-    const [selectedAddress, setSelectedAddress] = useState({
-        province: '',
-        city: '',
-        district: '',
-        subdistrict: ''
-    });
+    const initialAddress = {
+        provinceCode: '', provinceName: '',
+        regencyCode: '', regencyName: '',
+        districtCode: '', districtName: '',
+        villageCode: '', villageName: '',
+        postalCode: '',
+    };
+    const [selectedAddress, setSelectedAddress] = useState(initialAddress);
 
     const {
         formData, setFormData, birthDateParts, setBirthDateParts,
@@ -94,10 +96,15 @@ const CaptainProfile = () => {
                 };
 
                 const addressData = {
-                    province: profile.address_province || '',
-                    city: profile.address_city || '',
-                    district: profile.address_subdistrict || '',
-                    subdistrict: profile.address_village || '', // Ingat, subdistrict diisi dari address_village
+                    provinceCode: profile.address_province_code || '',
+                    provinceName: profile.address_province_name || '',
+                    regencyCode: profile.address_regency_code || '',
+                    regencyName: profile.address_regency_name || '',
+                    districtCode: profile.address_district_code || '',
+                    districtName: profile.address_district_name || '',
+                    villageCode: profile.address_village_code || '',
+                    villageName: profile.address_village_name || '',
+                    postalCode: profile.address_postal_code || '',
                 };
 
                 setSelectedAddress(addressData);
@@ -126,10 +133,15 @@ const CaptainProfile = () => {
                 birth_date: `${birthDateParts.year}-${birthDateParts.month}-${birthDateParts.day}`,
                 gender: formData.gender, job: formData.job, marital_status: formData.marital_status,
                 education: formData.education, nik: formData.nik,
-                address_province: selectedAddress.province,
-                address_city: selectedAddress.city,
-                address_subdistrict: selectedAddress.district,
-                address_village: selectedAddress.subdistrict,
+                address_province_code: selectedAddress.provinceCode,
+                address_province_name: selectedAddress.provinceName,
+                address_regency_code: selectedAddress.regencyCode,
+                address_regency_name: selectedAddress.regencyName,
+                address_district_code: selectedAddress.districtCode,
+                address_district_name: selectedAddress.districtName,
+                address_village_code: selectedAddress.villageCode,
+                address_village_name: selectedAddress.villageName,
+                address_postal_code: selectedAddress.postalCode,
                 address_detail: formData.address_detail,
                 referral_code: formData.referral_code,
             };
@@ -152,13 +164,13 @@ const CaptainProfile = () => {
     };
 
     const getFullAddress = () => {
-        const parts = [
-            // [PERUBAHAN] Tambahkan detail alamat di baris paling atas
+         const parts = [
             formData.address_detail,
-            selectedAddress.subdistrict,
-            selectedAddress.district,
-            selectedAddress.city,
-            selectedAddress.province
+            selectedAddress.villageName,
+            selectedAddress.districtName,
+            selectedAddress.regencyName,
+            selectedAddress.provinceName,
+            selectedAddress.postalCode,
         ];
         const address = parts.filter(part => part).join(', ');
         return address || '-';
@@ -273,22 +285,28 @@ const CaptainProfile = () => {
                                         <ProfileField label="Alamat Lengkap">
                                             {isEditing ? (
                                                 <div className="space-y-3">
-                                                    <select name="province" value={selectedAddress.province} onChange={handleAddressChange} className={selectClassName}>
-                                                        <option value="" disabled>Pilih Provinsi</option>
-                                                        {addressOptions.provinces.map(p => <option key={p.province} value={p.province}>{p.province}</option>)}
-                                                    </select>
-                                                    <select name="city" value={selectedAddress.city} onChange={handleAddressChange} disabled={!selectedAddress.province} className={selectClassName}>
-                                                        <option value="" disabled>Pilih Kota/Kabupaten</option>
-                                                        {addressOptions.cities.map(c => <option key={c.city} value={c.city}>{c.city}</option>)}
-                                                    </select>
-                                                    <select name="district" value={selectedAddress.district} onChange={handleAddressChange} disabled={!selectedAddress.city} className={selectClassName}>
-                                                        <option value="" disabled>Pilih Kecamatan</option>
-                                                        {addressOptions.districts.map(d => <option key={d.district} value={d.district}>{d.district}</option>)}
-                                                    </select>
-                                                    <select name="subdistrict" value={selectedAddress.subdistrict} onChange={handleAddressChange} disabled={!selectedAddress.district} className={selectClassName}>
-                                                        <option value="" disabled>Pilih Kelurahan/Desa</option>
-                                                        {addressOptions.subdistricts.map(s => <option key={s.subdistrict} value={s.subdistrict}>{s.subdistrict}</option>)}
-                                                    </select>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <SelectField name="province" value={JSON.stringify({ code: selectedAddress.provinceCode, name: selectedAddress.provinceName })} onChange={handleAddressChange}>
+                                                        <option value={JSON.stringify({ code: '', name: '' })}>Pilih Provinsi</option>
+                                                        {addressOptions.provinces.map(p => <option key={p.id} value={JSON.stringify({ code: p.id, name: p.value })}>{p.value}</option>)}
+                                                    </SelectField>
+                                                    <SelectField name="regency" value={JSON.stringify({ code: selectedAddress.regencyCode, name: selectedAddress.regencyName })} onChange={handleAddressChange} disabled={!selectedAddress.provinceCode}>
+                                                        <option value={JSON.stringify({ code: '', name: '' })}>Pilih Kota/Kabupaten</option>
+                                                        {addressOptions.regencies.map(r => <option key={r.id} value={JSON.stringify({ code: r.id, name: r.display })}>{r.display}</option>)}
+                                                    </SelectField>
+                                                    <SelectField name="district" value={JSON.stringify({ code: selectedAddress.districtCode, name: selectedAddress.districtName })} onChange={handleAddressChange} disabled={!selectedAddress.regencyCode}>
+                                                        <option value={JSON.stringify({ code: '', name: '' })}>Pilih Kecamatan</option>
+                                                        {addressOptions.districts.map(d => <option key={d.id} value={JSON.stringify({ code: d.id, name: d.value })}>{d.value}</option>)}
+                                                    </SelectField>
+                                                    <SelectField name="village" value={JSON.stringify({ code: selectedAddress.villageCode, name: selectedAddress.villageName })} onChange={handleAddressChange} disabled={!selectedAddress.districtCode}>
+                                                        <option value={JSON.stringify({ code: '', name: '' })}>Pilih Desa</option>
+                                                        {addressOptions.villages.map(v => <option key={v.id} value={JSON.stringify({ code: v.id, name: v.value })}>{v.value}</option>)}
+                                                    </SelectField>
+                                                    <SelectField name="postalCode" value={JSON.stringify({ code: selectedAddress.postalCode, name: selectedAddress.postalCode })} onChange={handleAddressChange} disabled={!selectedAddress.districtCode || addressOptions.zipcodes.length === 0}>
+                                                        <option value={JSON.stringify({ code: '', name: '' })}>Pilih Kode Pos</option>
+                                                        {addressOptions.zipcodes.map(z => <option key={z.id} value={JSON.stringify({ code: z.value, name: z.value })}>{z.value}</option>)}
+                                                    </SelectField>
+                                                </div>
                                                     <textarea
                                                         name="address_detail"
                                                         value={formData.address_detail}

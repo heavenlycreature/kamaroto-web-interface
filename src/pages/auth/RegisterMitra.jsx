@@ -35,7 +35,13 @@ const RegisterMitra = ({ isResubmitMode = false }) => {
         business_type: '', business_entity: '', business_name: '', business_address_detail: '', business_duration: '',
         social_media_account: '', agreement: false, password: '', referral_code: ''
     };
-    const initialAddress = { province: '', city: '', district: '', subdistrict: '' };
+    const initialAddress = {
+        provinceCode: '', provinceName: '',
+        regencyCode: '', regencyName: '',
+        districtCode: '', districtName: '',
+        villageCode: '', villageName: '',
+        postalCode: ''
+    };
 
     const { formData, setFormData, handleInputChange: genericHandleInputChange } = useFormHandlers(initialFormData, 'mitraFormData');
     const [selectedOwnerAddress, setSelectedOwnerAddress] = usePersistentState('mitraOwnerAddress', initialAddress);
@@ -44,6 +50,7 @@ const RegisterMitra = ({ isResubmitMode = false }) => {
     const { passwordValidation, confirmPassword, passwordError, setPasswordError, validatePasswordStrength, handleConfirmPasswordChange: handleConfirmPassChange } = usePasswordValidation();
     const { addressOptions: ownerAddressOptions, handleAddressChange: handleOwnerAddressChange } = useAddressDropdown(selectedOwnerAddress, setSelectedOwnerAddress);
     const { addressOptions: businessAddressOptions, handleAddressChange: handleBusinessAddressChange } = useAddressDropdown(selectedBusinessAddress, setSelectedBusinessAddress);
+ 
     const [coordinates, setCoordinates] = useState({ latitude: null, longitude: null });
 
     const [storeImage, setStoreImage] = useState(null);
@@ -111,18 +118,28 @@ const RegisterMitra = ({ isResubmitMode = false }) => {
                             social_media_account: mitraProfile.social_media_account,
                         });
 
-                        setSelectedOwnerAddress({
-                            province: mitraProfile.owner_address_province,
-                            city: mitraProfile.owner_address_city,
-                            district: mitraProfile.owner_address_subdistrict,
-                            subdistrict: mitraProfile.owner_address_village,
+                         setSelectedOwnerAddress({
+                            provinceCode: mitraProfile.owner_address_province_code,
+                            provinceName: mitraProfile.owner_address_province_name,
+                            regencyCode: mitraProfile.owner_address_regency_code,
+                            regencyName: mitraProfile.owner_address_regency_name,
+                            districtCode: mitraProfile.owner_address_district_code,
+                            districtName: mitraProfile.owner_address_district_name,
+                            villageCode: mitraProfile.owner_address_village_code,
+                            villageName: mitraProfile.owner_address_village_name,
+                            postalCode: mitraProfile.owner_address_postal_code,
                         });
 
                         setSelectedBusinessAddress({
-                            province: mitraProfile.business_address_province,
-                            city: mitraProfile.business_address_city,
-                            district: mitraProfile.business_address_subdistrict,
-                            subdistrict: mitraProfile.business_address_village,
+                            provinceCode: mitraProfile.business_address_province_code,
+                            provinceName: mitraProfile.business_address_province_name,
+                            regencyCode: mitraProfile.business_address_regency_code,
+                            regencyName: mitraProfile.business_address_regency_name,
+                            districtCode: mitraProfile.business_address_district_code,
+                            districtName: mitraProfile.business_address_district_name,
+                            villageCode: mitraProfile.business_address_village_code,
+                            villageName: mitraProfile.business_address_village_name,
+                            postalCode: mitraProfile.business_address_postal_code,
                         });
 
                         setSocialMediaPlatform(mitraProfile.social_media_platform);
@@ -139,17 +156,6 @@ const RegisterMitra = ({ isResubmitMode = false }) => {
         }
     }, [isResubmitMode, setFormData, setSelectedOwnerAddress, setSelectedBusinessAddress, setSocialMediaPlatform, location.state]);
 
-    useEffect(() => {
-        if (selectedBusinessAddress.subdistrict) {
-            const { province, city, district, subdistrict } = selectedBusinessAddress;
-            api.get(`/address/coordinates?province=${province}&city=${city}&district=${district}&subdistrict=${subdistrict}`)
-                .then((res) => setCoordinates(res.data))
-                .catch(err => {
-                    console.error("Error fetching coordinates for business address:", err);
-                    setCoordinates({ latitude: null, longitude: null });
-                });
-        }
-    }, [selectedBusinessAddress.subdistrict]);
 
     const handleInputChange = (e) => {
         if (e.target.name === 'business_entity' && e.target.value === 'perorangan') {
@@ -213,22 +219,28 @@ const RegisterMitra = ({ isResubmitMode = false }) => {
             registrationData.append(key, formDataForBackend[key]);
         });
 
-        registrationData.append('owner_address_province', selectedOwnerAddress.province);
-        registrationData.append('owner_address_city', selectedOwnerAddress.city);
-        registrationData.append('owner_address_subdistrict', selectedOwnerAddress.district);
-        registrationData.append('owner_address_village', selectedOwnerAddress.subdistrict);
+        registrationData.append('owner_address_province_code', selectedOwnerAddress.provinceCode);
+        registrationData.append('owner_address_province_name', selectedOwnerAddress.provinceName);
+        registrationData.append('owner_address_regency_code', selectedOwnerAddress.regencyCode);
+        registrationData.append('owner_address_regency_name', selectedOwnerAddress.regencyName);
+        registrationData.append('owner_address_district_code', selectedOwnerAddress.districtCode);
+        registrationData.append('owner_address_district_name', selectedOwnerAddress.districtName);
+        registrationData.append('owner_address_village_code', selectedOwnerAddress.villageCode);
+        registrationData.append('owner_address_village_name', selectedOwnerAddress.villageName);
+        registrationData.append('owner_address_postal_code', selectedOwnerAddress.postalCode);
 
-        registrationData.append('business_address_province', selectedBusinessAddress.province);
-        registrationData.append('business_address_city', selectedBusinessAddress.city);
-        registrationData.append('business_address_subdistrict', selectedBusinessAddress.district);
-        registrationData.append('business_address_village', selectedBusinessAddress.subdistrict);
+        
+        registrationData.append('business_address_province_code', selectedBusinessAddress.provinceCode);
+        registrationData.append('business_address_province_name', selectedBusinessAddress.provinceName);
+        registrationData.append('business_address_regency_code', selectedBusinessAddress.regencyCode);
+        registrationData.append('business_address_regency_name', selectedBusinessAddress.regencyName);
+        registrationData.append('business_address_district_code', selectedBusinessAddress.districtCode);
+        registrationData.append('business_address_district_name', selectedBusinessAddress.districtName);
+        registrationData.append('business_address_village_code', selectedBusinessAddress.villageCode);
+        registrationData.append('business_address_village_name', selectedBusinessAddress.villageName);
+        registrationData.append('business_address_postal_code', selectedBusinessAddress.postalCode);
 
-        // [PERBAIKAN] Hanya kirim koordinat jika valid (bukan null)
-        if (coordinates.latitude !== null && coordinates.longitude !== null) {
-            registrationData.append('latitude', coordinates.latitude);
-            registrationData.append('longitude', coordinates.longitude);
-        }
-
+       
         registrationData.append('social_media_platform', socialMediaPlatform);
 
         if (storeImage) {
@@ -236,11 +248,11 @@ const RegisterMitra = ({ isResubmitMode = false }) => {
             registrationData.append('store_images', storeImage);
         }
 
-        console.log("--- DATA YANG DIKIRIM KE BACKEND ---");
-        for (let [key, value] of registrationData.entries()) {
-            console.log(`${key}:`, value);
-        }
-        console.log("------------------------------------");
+        // console.log("--- DATA YANG DIKIRIM KE BACKEND ---");
+        // for (let [key, value] of registrationData.entries()) {
+        //     console.log(`${key}:`, value);
+        // }
+        // console.log("------------------------------------");
 
         try {
             const endpoint = isResubmitMode ? '/resubmit' : '/register/mitra';
@@ -365,10 +377,80 @@ const RegisterMitra = ({ isResubmitMode = false }) => {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Alamat Pemilik Sesuai KTP</label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <SelectField name="province" value={selectedOwnerAddress.province} onChange={handleOwnerAddressChange}><option value="">Pilih Provinsi</option>{ownerAddressOptions.provinces.map(p => <option key={p.province} value={p.province}>{p.province}</option>)}</SelectField>
-                                    <SelectField name="city" value={selectedOwnerAddress.city} onChange={handleOwnerAddressChange} disabled={!selectedOwnerAddress.province}><option value="">Pilih Kota/Kabupaten</option>{ownerAddressOptions.cities.map(c => <option key={c.city} value={c.city}>{c.city}</option>)}</SelectField>
-                                    <SelectField name="district" value={selectedOwnerAddress.district} onChange={handleOwnerAddressChange} disabled={!selectedOwnerAddress.city}><option value="">Pilih Kecamatan</option>{ownerAddressOptions.districts.map(d => <option key={d.district} value={d.district}>{d.district}</option>)}</SelectField>
-                                    <SelectField name="subdistrict" value={selectedOwnerAddress.subdistrict} onChange={handleOwnerAddressChange} disabled={!selectedOwnerAddress.district}><option value="">Pilih Kelurahan/Desa</option>{ownerAddressOptions.subdistricts.map(s => <option key={s.subdistrict} value={s.subdistrict}>{s.subdistrict}</option>)}</SelectField>
+                                 {/* Province */}
+                                <SelectField
+                                    name="province"
+                                    value={JSON.stringify({ code: selectedOwnerAddress.provinceCode, name: selectedOwnerAddress.provinceName })}
+                                    onChange={handleOwnerAddressChange}
+                                >
+                                    <option value={JSON.stringify({ code: '', name: '' })}>Pilih Provinsi</option>
+                                    {ownerAddressOptions.provinces.map(p => (
+                                    <option key={p.id} value={JSON.stringify({ code: p.id, name: p.value })}>
+                                        {p.value}
+                                    </option>
+                                    ))}
+                                </SelectField>
+
+                                {/* City / Regency */}
+                                <SelectField
+                                name="regency"
+                                value={JSON.stringify({ code: selectedOwnerAddress.regencyCode, name: selectedOwnerAddress.regencyName })}
+                                onChange={handleOwnerAddressChange}
+                                disabled={!selectedOwnerAddress.provinceCode}
+                                >
+                                <option value={JSON.stringify({ code: '', name: '' })}>Pilih Kota/Kabupaten</option>
+                                {ownerAddressOptions.regencies.map(r => (
+                                    <option key={r.id} value={JSON.stringify({ code: r.id, name: r.display })}>
+                                    {r.display}
+                                    </option>
+                                ))}
+                                </SelectField>
+
+                                {/* District */}
+                                <SelectField
+                                    name="district"
+                                    value={JSON.stringify({ code: selectedOwnerAddress.districtCode, name: selectedOwnerAddress.districtName })}
+                                    onChange={handleOwnerAddressChange}
+                                    disabled={!selectedOwnerAddress.regencyCode}
+                                >
+                                    <option value={JSON.stringify({ code: '', name: '' })}>Pilih Kecamatan</option>
+                                    {ownerAddressOptions.districts.map(d => (
+                                    <option key={d.id} value={JSON.stringify({ code: d.id, name: d.value })}>
+                                        {d.value}
+                                    </option>
+                                    ))}
+                                </SelectField>
+
+                                {/* Village */}
+                                <SelectField
+                                    name="village"
+                                    value={JSON.stringify({ code: selectedOwnerAddress.villageCode, name: selectedOwnerAddress.villageName })}
+                                    onChange={handleOwnerAddressChange}
+                                    disabled={!selectedOwnerAddress.districtCode}
+                                >
+                                    <option value={JSON.stringify({ code: '', name: '' })}>Pilih Desa</option>
+                                    {ownerAddressOptions.villages.map(v => (
+                                    <option key={v.id} value={JSON.stringify({ code: v.id, name: v.value })}>
+                                        {v.value}
+                                    </option>
+                                    ))}
+                                </SelectField>
+
+                                {/* Postal Code */}
+                                <SelectField
+                                name="postalCode"
+                                value={JSON.stringify({ code: selectedOwnerAddress.postalCode || '', name: selectedOwnerAddress.postalCode || '' })}
+                                onChange={handleOwnerAddressChange}
+                                disabled={!selectedOwnerAddress.districtCode || ownerAddressOptions.zipcodes.length === 0}
+                                >
+                                <option value={JSON.stringify({ code: '', name: '' })}>Pilih Kode Pos</option>
+                                {ownerAddressOptions.zipcodes.map(z => (
+                                    <option key={z.id} value={JSON.stringify({ code: z.value, name: z.value })}>
+                                    {z.value}
+                                    </option>
+                                ))}
+                                </SelectField>
+
                                 </div>
                                 <textarea name="owner_address_detail" value={formData.owner_address_detail} onChange={onInputChange} placeholder="Detail alamat: Nama Jalan, RT/RW, Gedung/No. Rumah" className="mt-4 block w-full px-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg shadow-sm" rows="3"></textarea>
                             </div>
@@ -435,10 +517,81 @@ const RegisterMitra = ({ isResubmitMode = false }) => {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Alamat Lengkap Usaha</label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <SelectField name="province" value={selectedBusinessAddress.province} onChange={handleBusinessAddressChange}><option value="">Pilih Provinsi</option>{businessAddressOptions.provinces.map(p => <option key={p.province} value={p.province}>{p.province}</option>)}</SelectField>
-                                    <SelectField name="city" value={selectedBusinessAddress.city} onChange={handleBusinessAddressChange} disabled={!selectedBusinessAddress.province}><option value="">Pilih Kota/Kabupaten</option>{businessAddressOptions.cities.map(c => <option key={c.city} value={c.city}>{c.city}</option>)}</SelectField>
-                                    <SelectField name="district" value={selectedBusinessAddress.district} onChange={handleBusinessAddressChange} disabled={!selectedBusinessAddress.city}><option value="">Pilih Kecamatan</option>{businessAddressOptions.districts.map(d => <option key={d.district} value={d.district}>{d.district}</option>)}</SelectField>
-                                    <SelectField name="subdistrict" value={selectedBusinessAddress.subdistrict} onChange={handleBusinessAddressChange} disabled={!selectedBusinessAddress.district}><option value="">Pilih Kelurahan/Desa</option>{businessAddressOptions.subdistricts.map(s => <option key={s.subdistrict} value={s.subdistrict}>{s.subdistrict}</option>)}</SelectField>
+                                   {/* Province */}
+                                    <SelectField
+                                        name="province"
+                                        value={JSON.stringify({ code: selectedBusinessAddress.provinceCode, name: selectedBusinessAddress.provinceName })}
+                                        onChange={handleBusinessAddressChange}
+                                    >
+                                        <option value={JSON.stringify({ code: '', name: '' })}>Pilih Provinsi</option>
+                                        {businessAddressOptions.provinces.map(p => (
+                                        <option key={p.id} value={JSON.stringify({ code: p.id, name: p.value })}>
+                                            {p.value}
+                                        </option>
+                                        ))}
+                                    </SelectField>
+
+                                   {/* City / Regency */}
+                                <SelectField
+                                name="regency"
+                                value={JSON.stringify({ code: selectedBusinessAddress.regencyCode, name: selectedBusinessAddress.regencyName })}
+                                onChange={handleBusinessAddressChange}
+                                disabled={!selectedBusinessAddress.provinceCode}
+                                >
+                                <option value={JSON.stringify({ code: '', name: '' })}>Pilih Kota/Kabupaten</option>
+                                {businessAddressOptions.regencies.map(r => (
+                                    <option key={r.id} value={JSON.stringify({ code: r.id, name: r.display })}>
+                                    {r.display}
+                                    </option>
+                                ))}
+                                </SelectField>
+
+
+                                    {/* District */}
+                                    <SelectField
+                                        name="district"
+                                        value={JSON.stringify({ code: selectedBusinessAddress.districtCode, name: selectedBusinessAddress.districtName })}
+                                        onChange={handleBusinessAddressChange}
+                                        disabled={!selectedBusinessAddress.regencyCode}
+                                    >
+                                        <option value={JSON.stringify({ code: '', name: '' })}>Pilih Kecamatan</option>
+                                        {businessAddressOptions.districts.map(d => (
+                                        <option key={d.id} value={JSON.stringify({ code: d.id, name: d.value })}>
+                                            {d.value}
+                                        </option>
+                                        ))}
+                                    </SelectField>
+
+                                    {/* Village */}
+                                    <SelectField
+                                        name="village"
+                                        value={JSON.stringify({ code: selectedBusinessAddress.villageCode, name: selectedBusinessAddress.villageName })}
+                                        onChange={handleBusinessAddressChange}
+                                        disabled={!selectedBusinessAddress.districtCode}
+                                    >
+                                        <option value={JSON.stringify({ code: '', name: '' })}>Pilih Desa</option>
+                                        {businessAddressOptions.villages.map(v => (
+                                        <option key={v.id} value={JSON.stringify({ code: v.id, name: v.value })}>
+                                            {v.value}
+                                        </option>
+                                        ))}
+                                    </SelectField>
+
+                                     {/* Postal Code */}
+                                <SelectField
+                                name="postalCode"
+                                value={JSON.stringify({ code: selectedBusinessAddress.postalCode || '', name: selectedBusinessAddress.postalCode || '' })}
+                                onChange={handleBusinessAddressChange}
+                                disabled={!selectedBusinessAddress.districtCode || businessAddressOptions.zipcodes.length === 0}
+                                >
+                                <option value={JSON.stringify({ code: '', name: '' })}>Pilih Kode Pos</option>
+                                {businessAddressOptions.zipcodes.map(z => (
+                                    <option key={z.id} value={JSON.stringify({ code: z.value, name: z.value })}>
+                                    {z.value}
+                                    </option>
+                                ))}
+                                </SelectField>
+                                
                                 </div>
                                 <textarea name="business_address_detail" value={formData.business_address_detail} onChange={handleInputChange} placeholder="Detail alamat: Nama Jalan, RT/RW, Gedung/No. Rumah" className="mt-4 block w-full px-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg shadow-sm" rows="3"></textarea>
                             </div>

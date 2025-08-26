@@ -72,7 +72,7 @@ const MemberDetailView = ({ member, type, onBack, onApprove, onReject, showAppro
                         <DetailRow label="Nomor KTP" value={profile.nik} />
                         <DetailRow label="Tempat & Tanggal Lahir" value={`${profile.birth_place || ''}, ${formatDate(profile.birth_date)}`} />
                         <DetailRow label="Jenis Kelamin" value={profile.gender} />
-                        <DetailRow label="Alamat" value={`${profile.address_detail}, ${profile.address_village}, ${profile.address_subdistrict}, ${profile.address_city}, ${profile.address_province}`} />
+                        <DetailRow label="Alamat" value={`${profile.address_detail}, ${profile.address_village_name}, ${profile.address_district_name}, ${profile.address_regency_name}, ${profile.address_province_name} ${profile.address_postal_code}`} />
                         <DetailRow label="Pekerjaan" value={profile.job} />
                         <DetailRow label="Status Pernikahan" value={profile.marital_status} />
                         <DetailRow label="Pendidikan" value={profile.education} />
@@ -95,14 +95,14 @@ const MemberDetailView = ({ member, type, onBack, onApprove, onReject, showAppro
                         <DetailRow label="Email Pemilik" value={profile.owner_email} />
                         <DetailRow label="Email Ter-verifikasi" value={member.email_is_verified ? 'Ya' : 'Tidak'}/>
                         <DetailRow label="Nomor HP Pemilik" value={profile.owner_phone} />
-                        <DetailRow label="Alamat Pemilik" value={`${profile.owner_address_detail}, ${profile.owner_address_village}, ${profile.owner_address_subdistrict}, ${profile.owner_address_city}, ${profile.owner_address_province}`} />
+                        <DetailRow label="Alamat Pemilik" value={`${profile.owner_address_detail}, ${profile.owner_address_village_name}, ${profile.owner_address_district_name}, ${profile.owner_address_regency_name}, ${profile.owner_address_province_name} ${profile.owner_address_postal_code}`} />
                         <DetailRow label="Tanggal Bergabung" value={formatDate(member.created_at)} />
                          <DetailRow 
                             label="Jenis Usaha" 
                             value={businessTypeMap[profile.business_type] || profile.business_type} 
                         />
                         <DetailRow label="Nama Badan Usaha" value={profile.business_name || "-"} />
-                        <DetailRow label="Alamat Usaha" value={`${profile.owner_address_detail}, ${profile.owner_address_village}, ${profile.owner_address_subdistrict}, ${profile.owner_address_city}, ${profile.owner_address_province}`} />
+                        <DetailRow label="Alamat Usaha" value={`${profile.business_address_detail}, ${profile.business_address_village_name}, ${profile.business_address_district_name}, ${profile.business_address_regency_name}, ${profile.business_address_province_name} ${profile.business_address_postal_code}`} />
                         <div className="py-3">
                             <dt className="text-sm font-medium text-slate-500 mb-2">Foto Tempat Usaha</dt>
                             <dd>

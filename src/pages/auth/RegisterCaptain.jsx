@@ -32,7 +32,13 @@ const RegisterCaptain = ({ isResubmitMode = false }) => {
         job: "", email: "", marital_status: "", education: "",
         address_detail: "", gender: "", nik: "", agreement: false, referral_code: ''
     };
-    const initialAddress = { province: "", city: "", district: "", subdistrict: "" };
+      const initialAddress = {
+        provinceCode: '', provinceName: '',
+        regencyCode: '', regencyName: '',
+        districtCode: '', districtName: '',
+        villageCode: '', villageName: '',
+        postalCode: ''
+    };
 
     // Gunakan useFormHandlers untuk mengelola state form utama dan input handlers
     const {
@@ -67,7 +73,6 @@ const RegisterCaptain = ({ isResubmitMode = false }) => {
     // State lain yang tidak dikelola oleh hook
     const [selfieFile, setSelfieFile] = useState(null);
     const [selfiePreview, setSelfiePreview] = useState(null);
-    const [coordinates, setCoordinates] = useState({ latitude: null, longitude: null });
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: "", text: "" });
     const [errorField, setErrorField] = useState(null);
@@ -109,13 +114,17 @@ const RegisterCaptain = ({ isResubmitMode = false }) => {
                         agreement: false,
                     });
 
-                    // Isi state untuk alamat
                     setSelectedAddress({
-                        province: profileData.coProfile.address_province,
-                        city: profileData.coProfile.address_city,
-                        district: profileData.coProfile.address_subdistrict,
-                        subdistrict: profileData.coProfile.address_village,
-                    });
+                            provinceCode: profileData.coProfile.address_province_code,
+                            provinceName: profileData.coProfile.address_province_name,
+                            regencyCode: profileData.coProfile.address_regency_code,
+                            regencyName: profileData.coProfile.address_regency_name,
+                            districtCode: profileData.coProfile.address_district_code,
+                            districtName: profileData.coProfile.address_district_name,
+                            villageCode: profileData.coProfile.address_village_code,
+                            villageName: profileData.coProfile.address_village_name,
+                            postalCode: profileData.coProfile.address_postal_code,
+                        });
 
                     // Pecah tanggal lahir untuk diisi ke input terpisah
                     if (profileData.coProfile.birth_date) {
@@ -138,18 +147,6 @@ const RegisterCaptain = ({ isResubmitMode = false }) => {
             fetchMyProfile();
         }
     }, [isResubmitMode, location.state]); // Efek ini hanya berjalan jika location.state berubah
-
-
-    // --- LOGIC & API CALLS ---
-
-    useEffect(() => {
-        if (!isResubmitMode && selectedAddress.subdistrict) {
-            const { province, city, district, subdistrict } = selectedAddress;
-            api.get(`/address/coordinates?province=${province}&city=${city}&district=${district}&subdistrict=${subdistrict}`)
-                .then((res) => setCoordinates(res.data))
-                .catch(err => console.error("Error fetching coordinates:", err));
-        }
-    }, [selectedAddress.subdistrict, isResubmitMode]);
 
     useEffect(() => {
         return () => { if (selfiePreview) URL.revokeObjectURL(selfiePreview); };
@@ -204,12 +201,16 @@ const RegisterCaptain = ({ isResubmitMode = false }) => {
         setLoading(true);
         const submissionData = new FormData();
         Object.keys(formData).forEach((key) => submissionData.append(key, formData[key]));
-        submissionData.append('address_province', selectedAddress.province);
-        submissionData.append('address_city', selectedAddress.city);
-        submissionData.append('address_subdistrict', selectedAddress.district);
-        submissionData.append('address_village', selectedAddress.subdistrict);
-        submissionData.append("latitude", coordinates.latitude);
-        submissionData.append("longitude", coordinates.longitude);
+        submissionData.append('address_province_code', selectedAddress.provinceCode);
+        submissionData.append('address_province_name', selectedAddress.provinceName);
+        submissionData.append('address_regency_code', selectedAddress.regencyCode);
+        submissionData.append('address_regency_name', selectedAddress.regencyName);
+        submissionData.append('address_district_code', selectedAddress.districtCode);
+        submissionData.append('address_district_name', selectedAddress.districtName);
+        submissionData.append('address_village_code', selectedAddress.villageCode);
+        submissionData.append('address_village_name', selectedAddress.villageName);
+        submissionData.append('address_postal_code', selectedAddress.postalCode);
+       
         if (formData.referral_code) {
             submissionData.set('referral_code', formData.referral_code.toLowerCase());
         }
@@ -350,10 +351,79 @@ const RegisterCaptain = ({ isResubmitMode = false }) => {
 
                         <FormSection title="Alamat Domisili">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <SelectField id="province" name="province" value={selectedAddress.province} onChange={handleAddressChange} required><option value="">Pilih Provinsi</option>{addressOptions.provinces.map((p) => (<option key={p.province} value={p.province}>{p.province}</option>))}</SelectField>
-                                <SelectField id="city" name="city" value={selectedAddress.city} onChange={handleAddressChange} required disabled={!selectedAddress.province || addressOptions.cities.length === 0}><option value="">Pilih Kota/Kabupaten</option>{addressOptions.cities.map((c) => (<option key={c.city} value={c.city}>{c.city}</option>))}</SelectField>
-                                <SelectField id="district" name="district" value={selectedAddress.district} onChange={handleAddressChange} required disabled={!selectedAddress.city || addressOptions.districts.length === 0}><option value="">Pilih Kecamatan</option>{addressOptions.districts.map((d) => (<option key={d.district} value={d.district}>{d.district}</option>))}</SelectField>
-                                <SelectField id="subdistrict" name="subdistrict" value={selectedAddress.subdistrict} onChange={handleAddressChange} required disabled={!selectedAddress.district || addressOptions.subdistricts.length === 0}><option value="">Pilih Kelurahan/Desa</option>{addressOptions.subdistricts.map((s) => (<option key={s.subdistrict} value={s.subdistrict}>{s.subdistrict}</option>))}</SelectField>
+                            {/* Province */}
+                                <SelectField
+                                    name="province"
+                                    value={JSON.stringify({ code: selectedAddress.provinceCode, name: selectedAddress.provinceName })}
+                                    onChange={handleAddressChange}
+                                >
+                                    <option value={JSON.stringify({ code: '', name: '' })}>Pilih Provinsi</option>
+                                    {addressOptions.provinces.map(p => (
+                                    <option key={p.id} value={JSON.stringify({ code: p.id, name: p.value })}>
+                                        {p.value}
+                                    </option>
+                                    ))}
+                                </SelectField>
+
+                                {/* City / Regency */}
+                                <SelectField
+                                name="regency"
+                                value={JSON.stringify({ code: selectedAddress.regencyCode, name: selectedAddress.regencyName })}
+                                onChange={handleAddressChange}
+                                disabled={!selectedAddress.provinceCode}
+                                >
+                                <option value={JSON.stringify({ code: '', name: '' })}>Pilih Kota/Kabupaten</option>
+                                {addressOptions.regencies.map(r => (
+                                    <option key={r.id} value={JSON.stringify({ code: r.id, name: r.display })}>
+                                    {r.display}
+                                    </option>
+                                ))}
+                                </SelectField>
+
+                                {/* District */}
+                                <SelectField
+                                    name="district"
+                                    value={JSON.stringify({ code: selectedAddress.districtCode, name: selectedAddress.districtName })}
+                                    onChange={handleAddressChange}
+                                    disabled={!selectedAddress.regencyCode}
+                                >
+                                    <option value={JSON.stringify({ code: '', name: '' })}>Pilih Kecamatan</option>
+                                    {addressOptions.districts.map(d => (
+                                    <option key={d.id} value={JSON.stringify({ code: d.id, name: d.value })}>
+                                        {d.value}
+                                    </option>
+                                    ))}
+                                </SelectField>
+
+                                {/* Village */}
+                                <SelectField
+                                    name="village"
+                                    value={JSON.stringify({ code: selectedAddress.villageCode, name: selectedAddress.villageName })}
+                                    onChange={handleAddressChange}
+                                    disabled={!selectedAddress.districtCode}
+                                >
+                                    <option value={JSON.stringify({ code: '', name: '' })}>Pilih Desa</option>
+                                    {addressOptions.villages.map(v => (
+                                    <option key={v.id} value={JSON.stringify({ code: v.id, name: v.value })}>
+                                        {v.value}
+                                    </option>
+                                    ))}
+                                </SelectField>
+
+                                {/* Postal Code */}
+                                <SelectField
+                                name="postalCode"
+                                value={JSON.stringify({ code: selectedAddress.postalCode || '', name: selectedAddress.postalCode || '' })}
+                                onChange={handleAddressChange}
+                                disabled={!selectedAddress.districtCode || addressOptions.zipcodes.length === 0}
+                                >
+                                <option value={JSON.stringify({ code: '', name: '' })}>Pilih Kode Pos</option>
+                                {addressOptions.zipcodes.map(z => (
+                                    <option key={z.id} value={JSON.stringify({ code: z.value, name: z.value })}>
+                                    {z.value}
+                                    </option>
+                                ))}
+                                </SelectField>         
                             </div>
                             <textarea name="address_detail" value={formData.address_detail} onChange={handleInputChange} placeholder="Detail alamat: Nama Jalan, RT/RW, Gedung/No. Rumah" className="mt-4 block w-full px-4 py-3 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg shadow-sm" rows="3" required></textarea>
                         </FormSection>

@@ -11,8 +11,7 @@ import ProfileField from '../../components/profile/ProfileField';
 import InfoCard from '../../components/profile/InfoCard';
 import ChangePasswordModal from '../../components/profile/ChangePasswordModal';
 import RejectedStatusView from '../../components/profile/RejectedStatusView';
-// [PERUBAHAN] Asumsi path ke komponen InputField Anda, sesuaikan jika perlu.
-import { InputField } from '../../components/form/FormElements';
+import { InputField, SelectField } from '../../components/form/FormElements';
 
 // --- Komponen Ikon ---
 const MenuIcon = () => <svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>;
@@ -21,9 +20,22 @@ const mitraNavLinks = [
     { to: '/mitra/profile', label: 'Profil Saya', icon: <img src="https://icongr.am/feather/user.svg?size=20&color=ffffff" alt="Profil" /> },
 ];
 
+const businessTypeMap = {
+    'jual_beli_kendaraan': 'Jual Beli Kendaraan',
+    'bengkel': 'Jasa Bengkel',
+    'cuci_kendaraan': 'Jasa Cuci Kendaraan',
+    'jual_beli_sparepart': 'Jual Beli Sparepart',
+    'sewa_kendaraan': 'Jasa Sewa Kendaraan',
+    'insurance_consultant': 'Insurance Consultant',
+    'pembiayaan': 'Fasilitas Pembiayaan',
+    'biro_jasa': 'Biro Jasa dan Sekolah Mengemudi',
+};
+
+const reverseBusinessTypeMap = Object.fromEntries(
+    Object.entries(businessTypeMap).map(([key, value]) => [value, key])
+);
 const MitraProfile = () => {
-    // --- State Management ---
-    const [isEditing, setIsEditing] = useState(false);
+ const [isEditing, setIsEditing] = useState(false);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [originalData, setOriginalData] = useState(null);
@@ -33,61 +45,69 @@ const MitraProfile = () => {
     const navigate = useNavigate();
 
     const { formData, setFormData, handleInputChange } = useFormHandlers({
-        email: "", phone: "", status: "", avatar: "",
-        email_is_verified: false, 
+        email: "", status: "", avatar: "",
         pic_name: "", pic_phone: "", pic_email: "", pic_status: "",
         owner_name: "", owner_phone: "", owner_email: "", owner_ktp: "",
         business_type: "", business_entity: "", business_name: "",
-        business_duration: "", social_media_platform: "", social_media_account: ""
+        business_duration: "", social_media_platform: "", social_media_account: "",
+        owner_address_detail: "", business_address_detail: "",
+        rejection_reason: "", resubmit_allowed: false,
     });
 
-    const [ownerAddress, setOwnerAddress] = useState({ province: '', city: '', district: '', subdistrict: '', detail: '' });
-    const { addressOptions: ownerAddressOptions, handleAddressChange: handleOwnerAddressChange } = useAddressDropdown(ownerAddress, setOwnerAddress);
+    const initialAddress = {
+        provinceCode: '', provinceName: '', regencyCode: '', regencyName: '',
+        districtCode: '', districtName: '', villageCode: '', villageName: '', postalCode: '',
+    };
 
-    const [businessAddress, setBusinessAddress] = useState({ province: '', city: '', district: '', subdistrict: '', detail: '' });
-    const { addressOptions: businessAddressOptions, handleAddressChange: handleBusinessAddressChange } = useAddressDropdown(businessAddress, setBusinessAddress);
-    useEffect(() => {
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (user?.status === 'rejected' || user?.status === 'pending') {
-            navigate('/status'); // Redirect paksa jika mencoba akses langsung
-        }
-    }, [navigate]);
+    const [selectedOwnerAddress, setSelectedOwnerAddress] = useState(initialAddress);
+    const { addressOptions: ownerAddressOptions, handleAddressChange: handleOwnerAddressChange } = useAddressDropdown(selectedOwnerAddress, setSelectedOwnerAddress);
+
+    const [selectedBusinessAddress, setSelectedBusinessAddress] = useState(initialAddress);
+    const { addressOptions: businessAddressOptions, handleAddressChange: handleBusinessAddressChange } = useAddressDropdown(selectedBusinessAddress, setSelectedBusinessAddress);
+
     // --- Data Fetching ---
     useEffect(() => {
         const fetchProfile = async () => {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) throw new Error("Sesi tidak valid.");
+                
                 const response = await api.get('/mitra/profile', { headers: { 'Authorization': `Bearer ${token}` } });
                 const user = response.data;
                 const mitraProfile = user.mitraProfile;
                 if (!mitraProfile) throw new Error("Data profil mitra tidak ditemukan.");
-                if (user.status === 'rejected') { navigate('/status'); return; }
 
                 const initialFormData = {
-                    email: user.email, phone: user.phone, status: user.status,
-                    email_is_verified: user.email_is_verified || false,
-                    avatar: "https://placehold.co/96x96/ffffff/ea580c?text=Mitra",
+                    email: user.email, status: user.status,
+                    avatar: mitraProfile.store_images ? `http://localhost:3000${mitraProfile.store_images}` : "https://placehold.co/96x96/ffffff/ea580c?text=Mitra",
                     pic_name: mitraProfile.pic_name || "", pic_phone: mitraProfile.pic_phone || "", pic_email: mitraProfile.pic_email || "", pic_status: mitraProfile.pic_status || "",
                     owner_name: mitraProfile.owner_name || "", owner_phone: mitraProfile.owner_phone || "", owner_email: mitraProfile.owner_email || "", owner_ktp: mitraProfile.owner_ktp || "",
-                    business_type: mitraProfile.business_type || "", business_entity: mitraProfile.business_entity || "", business_name: mitraProfile.business_name || "",
-                    business_duration: mitraProfile.business_duration || "", social_media_platform: mitraProfile.social_media_platform || "", social_media_account: mitraProfile.social_media_account || ""
+                    business_type: businessTypeMap[mitraProfile.business_type] || mitraProfile.business_type || "", business_entity: mitraProfile.business_entity || "", business_name: mitraProfile.business_name || "",
+                    business_duration: mitraProfile.business_duration || "", social_media_platform: mitraProfile.social_media_platform || "", social_media_account: mitraProfile.social_media_account || "",
+                    owner_address_detail: mitraProfile.owner_address_detail || "",
+                    business_address_detail: mitraProfile.business_address_detail || "",
+                    rejection_reason: user.rejection_reason,
+                    resubmit_allowed: user.resubmit_allowed,
                 };
                 setFormData(initialFormData);
 
                 const ownerAddr = {
-                    province: mitraProfile.owner_address_province || "", city: mitraProfile.owner_address_city || "",
-                    district: mitraProfile.owner_address_subdistrict || "", subdistrict: mitraProfile.owner_address_village || "",
-                    detail: mitraProfile.owner_address_detail || ""
+                    provinceCode: mitraProfile.owner_address_province_code || '', provinceName: mitraProfile.owner_address_province_name || '',
+                    regencyCode: mitraProfile.owner_address_regency_code || '', regencyName: mitraProfile.owner_address_regency_name || '',
+                    districtCode: mitraProfile.owner_address_district_code || '', districtName: mitraProfile.owner_address_district_name || '',
+                    villageCode: mitraProfile.owner_address_village_code || '', villageName: mitraProfile.owner_address_village_name || '',
+                    postalCode: mitraProfile.owner_address_postal_code || '',
                 };
-                setOwnerAddress(ownerAddr);
+                setSelectedOwnerAddress(ownerAddr);
 
                 const businessAddr = {
-                    province: mitraProfile.business_address_province || "", city: mitraProfile.business_address_city || "",
-                    district: mitraProfile.business_address_subdistrict || "", subdistrict: mitraProfile.business_address_village || "",
-                    detail: mitraProfile.business_address_detail || ""
+                    provinceCode: mitraProfile.business_address_province_code || '', provinceName: mitraProfile.business_address_province_name || '',
+                    regencyCode: mitraProfile.business_address_regency_code || '', regencyName: mitraProfile.business_address_regency_name || '',
+                    districtCode: mitraProfile.business_address_district_code || '', districtName: mitraProfile.business_address_district_name || '',
+                    villageCode: mitraProfile.business_address_village_code || '', villageName: mitraProfile.business_address_village_name || '',
+                    postalCode: mitraProfile.business_address_postal_code || '',
                 };
-                setBusinessAddress(businessAddr);
+                setSelectedBusinessAddress(businessAddr);
 
                 setOriginalData({ formData: initialFormData, ownerAddress: ownerAddr, businessAddress: businessAddr });
             } catch (err) {
@@ -97,31 +117,39 @@ const MitraProfile = () => {
             }
         };
         fetchProfile();
-    }, [navigate, setFormData]);
+    }, [setFormData]);
 
     // --- Action Handlers ---
-    const handleSaveChanges = async () => {
+    const handleSaveChanges = async (isResubmit = false) => {
         setLoading(true);
         setSaveMessage({ type: '', text: '' });
         try {
             const token = localStorage.getItem('token');
             if (!token) throw new Error("Sesi Anda telah berakhir.");
 
+            // [PENYESUAIAN] Buat payload dengan struktur data baru
             const payload = {
                 ...formData,
-                owner_address_province: ownerAddress.province, owner_address_city: ownerAddress.city,
-                owner_address_subdistrict: ownerAddress.district, owner_address_village: ownerAddress.subdistrict,
-                owner_address_detail: ownerAddress.detail,
-                business_address_province: businessAddress.province, business_address_city: businessAddress.city,
-                business_address_subdistrict: businessAddress.district, business_address_village: businessAddress.subdistrict,
-                business_address_detail: businessAddress.detail,
+                ...selectedOwnerAddress,
+                ...selectedBusinessAddress, 
             };
-            delete payload.email; delete payload.phone; delete payload.status; delete payload.avatar;
+            
+            if (payload.business_type) {
+                payload.business_type = reverseBusinessTypeMap[payload.business_type] || payload.business_type;
+            }
 
-            await api.put('/mitra/profile/edit', payload, { headers: { 'Authorization': `Bearer ${token}` } });
-            setOriginalData({ formData, ownerAddress, businessAddress });
+            delete payload.email; delete payload.status; delete payload.avatar;
+            delete payload.rejection_reason; delete payload.resubmit_allowed;
+
+            const endpoint = isResubmit ? '/resubmit' : '/mitra/profile/edit';
+            await api.put(endpoint, payload, { headers: { 'Authorization': `Bearer ${token}` } });
+            
+            setOriginalData({ formData, ownerAddress: selectedOwnerAddress, businessAddress: selectedBusinessAddress });
             setIsEditing(false);
-            setSaveMessage({ type: 'success', text: 'Profil berhasil diperbarui!' });
+            const successMessage = isResubmit ? 'Data berhasil dikirim ulang! Akun Anda akan ditinjau kembali.' : 'Profil berhasil diperbarui!';
+            setSaveMessage({ type: 'success', text: successMessage });
+            if (isResubmit) setTimeout(() => navigate('/status'), 2000);
+
         } catch (err) {
             setSaveMessage({ type: 'error', text: err.response?.data?.message || "Gagal menyimpan perubahan." });
         } finally {
@@ -131,47 +159,84 @@ const MitraProfile = () => {
 
     const handleCancelEdit = () => {
         setFormData(originalData.formData);
-        setOwnerAddress(originalData.ownerAddress);
-        setBusinessAddress(originalData.businessAddress);
+        setSelectedOwnerAddress(originalData.ownerAddress);
+        setSelectedBusinessAddress(originalData.businessAddress);
         setIsEditing(false);
         setSaveMessage({ type: '', text: '' });
     };
 
-    const getFullAddress = (addressState) => {
-        const parts = [addressState.detail, addressState.subdistrict, addressState.district, addressState.city, addressState.province];
+    const getFullAddress = (addressState, detail) => {
+        const parts = [detail, addressState.villageName, addressState.districtName, addressState.regencyName, addressState.provinceName, addressState.postalCode];
         return parts.filter(part => part).join(', ') || '-';
     };
 
-    const handlePasswordChange = async (passwords) => { /* ... (Tidak ada perubahan) ... */ };
+      const handlePasswordChange = async (passwords) => {
+            setLoading(true);
+            setSaveMessage({ type: '', text: '' });
+            try {
+                const token = localStorage.getItem('token');
+                await api.post('/api/profile/change-password', passwords, { headers: { 'Authorization': `Bearer ${token}` } });
+                setSaveMessage({ type: 'success', text: 'Password berhasil diubah.' });
+                setIsPasswordModalOpen(false);
+            } catch (err) {
+                const errorMessage = err.response?.data?.message || "Gagal mengubah password.";
+                setSaveMessage({ type: 'error', text: errorMessage });
+            } finally {
+                setLoading(false);
+            }
+        };
+
     if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
     if (error) return <div className="flex items-center justify-center min-h-screen text-red-500">{error}</div>;
+
+    // [LOGIKA BARU] Tampilkan halaman rejected jika statusnya rejected
     if (formData.status === 'rejected' && !isEditing) {
-        return <RejectedStatusView user={{ ...formData, name: formData.business_name }} onEditClick={() => setIsEditing(true)} />;
+        return <RejectedStatusView user={{...formData, name: formData.business_name}} onEditClick={() => setIsEditing(true)} />;
     }
 
-    const EditModeFooter = (<> <button onClick={handleCancelEdit} className="px-5 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300">Batal</button> <button onClick={handleSaveChanges} disabled={loading} className="px-5 py-2 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 disabled:bg-gray-400"> {loading ? 'Menyimpan...' : 'Simpan Perubahan'} </button> </>);
     const selectClassName = "block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-200";
-    const textareaClassName = "block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500";
 
-    const AddressFields = ({ addressState, addressOptions, handleChange }) => (
+    const EditModeFooter = (
+        <>
+            <button onClick={handleCancelEdit} className="px-5 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300">Batal</button>
+            <button onClick={() => handleSaveChanges(formData.status === 'rejected')} disabled={loading} className="px-5 py-2 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 disabled:bg-gray-400">
+                {loading ? 'Menyimpan...' : (formData.status === 'rejected' ? 'Kirim Ulang' : 'Simpan Perubahan')}
+            </button>
+        </>
+    );
+
+    const AddressFields = ({ addressState, addressOptions, onAddressChange, onDetailChange, detailValue, detailName }) => (
         <div className="space-y-3">
-            <textarea name="detail" value={addressState.detail} onChange={handleChange} rows="3" className={textareaClassName} placeholder="Detail Alamat (Nama Jalan, No. Rumah, RT/RW)" />
-            <select name="province" value={addressState.province} onChange={handleChange} className={selectClassName}>
-                <option value="" disabled>Pilih Provinsi</option>
-                {addressOptions.provinces.map(p => <option key={p.province} value={p.province}>{p.province}</option>)}
-            </select>
-            <select name="city" value={addressState.city} onChange={handleChange} disabled={!addressState.province} className={selectClassName}>
-                <option value="" disabled>Pilih Kota/Kabupaten</option>
-                {addressOptions.cities.map(c => <option key={c.city} value={c.city}>{c.city}</option>)}
-            </select>
-            <select name="district" value={addressState.district} onChange={handleChange} disabled={!addressState.city} className={selectClassName}>
-                <option value="" disabled>Pilih Kecamatan</option>
-                {addressOptions.districts.map(d => <option key={d.district} value={d.district}>{d.district}</option>)}
-            </select>
-            <select name="subdistrict" value={addressState.subdistrict} onChange={handleChange} disabled={!addressState.district} className={selectClassName}>
-                <option value="" disabled>Pilih Kelurahan/Desa</option>
-                {addressOptions.subdistricts.map(s => <option key={s.subdistrict} value={s.subdistrict}>{s.subdistrict}</option>)}
-            </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <SelectField name="province" value={JSON.stringify({ code: addressState.provinceCode, name: addressState.provinceName })} onChange={onAddressChange}>
+                    <option value={JSON.stringify({ code: '', name: '' })}>Pilih Provinsi</option>
+                    {addressOptions.provinces.map(p => <option key={p.id} value={JSON.stringify({ code: p.id, name: p.value })}>{p.value}</option>)}
+                </SelectField>
+                <SelectField name="regency" value={JSON.stringify({ code: addressState.regencyCode, name: addressState.regencyName })} onChange={onAddressChange} disabled={!addressState.provinceCode}>
+                    <option value={JSON.stringify({ code: '', name: '' })}>Pilih Kota/Kabupaten</option>
+                    {addressOptions.regencies.map(r => <option key={r.id} value={JSON.stringify({ code: r.id, name: r.display })}>{r.display}</option>)}
+                </SelectField>
+                <SelectField name="district" value={JSON.stringify({ code: addressState.districtCode, name: addressState.districtName })} onChange={onAddressChange} disabled={!addressState.regencyCode}>
+                    <option value={JSON.stringify({ code: '', name: '' })}>Pilih Kecamatan</option>
+                    {addressOptions.districts.map(d => <option key={d.id} value={JSON.stringify({ code: d.id, name: d.value })}>{d.value}</option>)}
+                </SelectField>
+                <SelectField name="village" value={JSON.stringify({ code: addressState.villageCode, name: addressState.villageName })} onChange={onAddressChange} disabled={!addressState.districtCode}>
+                    <option value={JSON.stringify({ code: '', name: '' })}>Pilih Desa</option>
+                    {addressOptions.villages.map(v => <option key={v.id} value={JSON.stringify({ code: v.id, name: v.value })}>{v.value}</option>)}
+                </SelectField>
+                <SelectField name="postalCode" value={JSON.stringify({ code: addressState.postalCode, name: addressState.postalCode })} onChange={onAddressChange} disabled={!addressState.districtCode || addressOptions.zipcodes.length === 0}>
+                    <option value={JSON.stringify({ code: '', name: '' })}>Pilih Kode Pos</option>
+                    {addressOptions.zipcodes.map(z => <option key={z.id} value={JSON.stringify({ code: z.value, name: z.value })}>{z.value}</option>)}
+                </SelectField>
+            </div>
+            <textarea
+                name={detailName}
+                value={detailValue}
+                onChange={onDetailChange}
+                rows="3"
+                className="block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm"
+                placeholder="Detail Alamat (Nama Jalan, No. Rumah, RT/RW)"
+            />
         </div>
     );
 
@@ -196,7 +261,23 @@ const MitraProfile = () => {
 
                                 <InfoCard title="Informasi Bisnis" description="Detail mengenai usaha Anda." isEditing={isEditing} onEdit={() => setIsEditing(true)}>
                                     <dl className="divide-y divide-gray-200">
-                                        <ProfileField label="Jenis Usaha" name="business_type" value={formData.business_type} isEditing={isEditing} onChange={handleInputChange} />
+                                         <ProfileField label="Jenis Usaha">
+                                    {isEditing ? (
+                                        <select
+                                            name="business_type"
+                                            value={formData.business_type}
+                                            onChange={handleInputChange}
+                                            className="block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                                        >
+                                            <option value="" disabled>Pilih Jenis Usaha</option>
+                                            {Object.values(businessTypeMap).map(value => (
+                                                <option key={value} value={value}>{value}</option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <span className="font-semibold">{formData.business_type || '-'}</span>
+                                    )}
+                                </ProfileField>
 
                                         {/* [PERUBAHAN] Menggunakan kode yang Anda berikan untuk Badan Usaha & Nama Usaha */}
                                         <ProfileField label="Badan Usaha">
@@ -226,7 +307,7 @@ const MitraProfile = () => {
                                             )}
                                         </ProfileField>
 
-                                        <ProfileField label="Alamat Bisnis">{isEditing ? <AddressFields addressState={businessAddress} addressOptions={businessAddressOptions} handleChange={handleBusinessAddressChange} /> : <span className="font-semibold">{getFullAddress(businessAddress)}</span>}</ProfileField>
+                                        <ProfileField label="Alamat Bisnis">{isEditing ? <AddressFields addressState={selectedBusinessAddress} addressOptions={businessAddressOptions} onAddressChange={handleBusinessAddressChange} onDetailChange={handleInputChange} detailValue={formData.business_address_detail} detailName="business_address_detail" /> : <span className="font-semibold">{getFullAddress(selectedBusinessAddress, formData.business_address_detail)}</span>}</ProfileField>
                                         <ProfileField label="Lama Usaha" name="business_duration" value={formData.business_duration} isEditing={isEditing} onChange={handleInputChange} />
 
                                         {/* [PERUBAHAN] Platform Medsos menjadi dropdown */}
@@ -253,7 +334,7 @@ const MitraProfile = () => {
                                         <ProfileField label="No. HP Pemilik" name="owner_phone" value={formData.owner_phone} isEditing={isEditing} onChange={handleInputChange} />
                                         <ProfileField label="Email Pemilik" name="owner_email" value={formData.owner_email} isEditing={isEditing} onChange={handleInputChange} />
                                         <ProfileField label="No. KTP Pemilik" name="owner_ktp" value={formData.owner_ktp} isEditing={isEditing} onChange={handleInputChange} />
-                                        <ProfileField label="Alamat Pemilik">{isEditing ? <AddressFields addressState={ownerAddress} addressOptions={ownerAddressOptions} handleChange={handleOwnerAddressChange} /> : <span className="font-semibold">{getFullAddress(ownerAddress)}</span>}</ProfileField>
+                                        <ProfileField label="Alamat Pemilik">{isEditing ? <AddressFields addressState={selectedOwnerAddress} addressOptions={ownerAddressOptions} onAddressChange={handleOwnerAddressChange} onDetailChange={handleInputChange} detailValue={formData.owner_address_detail} detailName="owner_address_detail" /> : <span className="font-semibold">{getFullAddress(selectedOwnerAddress, formData.owner_address_detail)}</span>}</ProfileField>
                                     </dl>
                                 </InfoCard>
 

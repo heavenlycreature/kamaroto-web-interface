@@ -120,8 +120,8 @@ function App() {
             <Route path="/verify-email" element={<CheckEmailPage />} />
             <Route path="/verify" element={<VerifyPage />} />
             <Route path="/gabung" element={<JoinUs />} />
-            <Route path="/gabco" element={<GabCo />} />
-            <Route path="/gabmi" element={<GabMi />} />
+            <Route path="/gabung/co" element={<GabCo />} />
+            <Route path="/gabung/mitra" element={<GabMi />} />
 
               {/* --- Rute Khusus Tamu (Tidak Bisa Diakses Jika Sudah Login) --- */}
               <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
