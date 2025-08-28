@@ -42,10 +42,6 @@ const VehicleForm = ({ vehicleDetail, handleDetailChange }) => (
             <input type="number" name="odometer" id="odometer" value={vehicleDetail.odometer} onChange={handleDetailChange} placeholder="Contoh: 45000" required className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg" />
         </div>
         <div>
-            <label htmlFor="color" className="block text-sm font-medium text-slate-600">Warna</label>
-            <input type="text" name="color" id="color" value={vehicleDetail.color} onChange={handleDetailChange} placeholder="Contoh: Putih" required className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg" />
-        </div>
-        <div>
             <label htmlFor="transmission" className="block text-sm font-medium text-slate-600">Transmisi</label>
             <select name="transmission" id="transmission" value={vehicleDetail.transmission} onChange={handleDetailChange} required className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg">
                 <option>Automatic</option>
@@ -87,7 +83,7 @@ const AddItemPage = () => {
     
     // State untuk data spesifik kendaraan
     const [vehicleDetail, setVehicleDetail] = useState({
-        brand: '', model: '', year: '', odometer: '', color: '', 
+        brand: '', model: '', year: '', odometer: '',
         transmission: 'Automatic', fuel: 'Bensin', condition: 'Sangat Baik'
     });
 
@@ -153,8 +149,8 @@ const AddItemPage = () => {
         
         const fullVehicleDetail = { 
             ...vehicleDetail, 
-            year: parseInt(vehicleDetail.year, 10),
-            odometer: parseInt(vehicleDetail.odometer, 10),
+            year: vehicleDetail.year,
+            odometer: vehicleDetail.odometer,
             condition: vehicleDetail.condition 
         };
         formData.append('vehicleDetail', JSON.stringify(fullVehicleDetail));
