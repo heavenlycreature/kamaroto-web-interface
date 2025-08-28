@@ -1,7 +1,7 @@
 // pages/mitra/StoreProfilePage.jsx
 // Halaman manajemen toko Mitra dengan desain dan fungsionalitas profesional.
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ProfileSidebar from '../../components/profile/ProfileSidebar';
 import api from '../../api/api';
@@ -13,63 +13,162 @@ const PackageIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" hei
 const HistoryIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 4v6h6"></path><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>;
 const PlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
 const StarIcon = ({ isFilled }) => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={isFilled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isFilled ? "text-yellow-400" : "text-slate-400"}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>;
+const LocationIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>;
 
 // --- Komponen untuk setiap Tab ---
 
-const StoreInfoTab = ({ storeData }) => {
+const StoreInfoTab = ({ storeData, onUpdateSuccess }) => {
+    const [name, setName] = useState('');
+    const [about, setAbout] = useState('');
+    const [slug, setSlug] = useState('');
+    const [openHours, setOpenHours] = useState({});
+
+    const [logoFile, setLogoFile] = useState(null);
+    const [logoPreview, setLogoPreview] = useState('');
+    const [bannerFile, setBannerFile] = useState(null);
+    const [bannerPreview, setBannerPreview] = useState('');
+
+    const [isSaving, setIsSaving] = useState(false);
+    const [message, setMessage] = useState({ type: '', text: '' });
+
+    const logoInputRef = useRef(null);
+    const bannerInputRef = useRef(null);
+
+    useEffect(() => {
+        if (storeData) {
+            setName(storeData.name || '');
+            setAbout(storeData.about || '');
+            setSlug(storeData.slug || '');
+            setLogoPreview(storeData.profileImage || "https://placehold.co/128x128/e2e8f0/64748b?text=Logo");
+            setBannerPreview(storeData.bannerImage || "https://placehold.co/600x250/e2e8f0/64748b?text=Banner");
+
+            const initialHours = storeData.openHours || {};
+            const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+            const fullHours = days.reduce((acc, day) => {
+                acc[day] = initialHours[day] || { isOpen: true, open: '08:00', close: '17:00' };
+                return acc;
+            }, {});
+            setOpenHours(fullHours);
+        }
+    }, [storeData]);
+
+    const handleFileChange = (e, type) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (type === 'logo') {
+                setLogoFile(file);
+                setLogoPreview(URL.createObjectURL(file));
+            } else {
+                setBannerFile(file);
+                setBannerPreview(URL.createObjectURL(file));
+            }
+        }
+    };
+
+    const handleTimeChange = (day, timeType, value) => {
+        setOpenHours(prev => ({
+            ...prev,
+            [day]: { ...prev[day], [timeType]: value }
+        }));
+    };
+
+    const handleDayToggle = (day) => {
+        setOpenHours(prev => ({
+            ...prev,
+            [day]: { ...prev[day], isOpen: !prev[day].isOpen }
+        }));
+    };
+
+    const handleSaveChanges = async () => {
+        setIsSaving(true);
+        setMessage({ type: '', text: '' });
+
+        const formData = new FormData();
+        formData.append('business_name', name);
+        formData.append('business_description', about); // Sesuaikan dengan field backend
+        formData.append('business_slug', slug); // Sesuaikan dengan field backend
+        formData.append('openHours', JSON.stringify(openHours));
+
+        if (logoFile) formData.append('business_logo_url', logoFile); 
+        if (bannerFile) formData.append('business_banner_url', bannerFile);
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await api.put('/mitra/store/info', formData, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            setMessage({ type: 'success', text: response.data.message });
+            onUpdateSuccess(); // Panggil fungsi untuk refresh data di parent
+        } catch (err) {
+            setMessage({ type: 'error', text: err.response?.data?.message || 'Gagal menyimpan perubahan.' });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     return (
         <div className="space-y-8">
-            {/* Bagian Branding */}
+            {message.text && <div className={`p-3 rounded-lg text-center text-sm ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{message.text}</div>}
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
                 <div className="md:col-span-1 space-y-2">
                     <label className="block text-sm font-medium text-slate-600">Logo Toko</label>
-                    <div className="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-slate-200 ring-4 ring-white shadow">
-                        <img src={storeData.profileImage} alt="Profil Toko" className="w-full h-full object-cover rounded-full" />
+                    <input type="file" ref={logoInputRef} onChange={(e) => handleFileChange(e, 'logo')} className="hidden" accept="image/*" />
+                    <div onClick={() => logoInputRef.current.click()} className="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-slate-200 ring-4 ring-white shadow">
+                        <img src={logoPreview} alt="Profil Toko" className="w-full h-full object-cover rounded-full" />
                     </div>
                 </div>
                 <div className="md:col-span-2 space-y-2">
                     <label className="block text-sm font-medium text-slate-600">Banner Toko</label>
-                    <div className="w-full h-48 bg-slate-100 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-200 ring-4 ring-white shadow">
-                        <img src={storeData.bannerImage} alt="Banner Toko" className="w-full h-full object-cover rounded-xl" />
+                    <input type="file" ref={bannerInputRef} onChange={(e) => handleFileChange(e, 'banner')} className="hidden" accept="image/*" />
+                    <div onClick={() => bannerInputRef.current.click()} className="w-full h-48 bg-slate-100 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-200 ring-4 ring-white shadow">
+                        <img src={bannerPreview} alt="Banner Toko" className="w-full h-full object-cover rounded-xl" />
                     </div>
                 </div>
             </div>
 
-            {/* Bagian Informasi Utama */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label htmlFor="storeName" className="block text-sm font-medium text-slate-600">Nama Toko</label>
-                    <input type="text" id="storeName" defaultValue={storeData.name} className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                    <input type="text" id="storeName" value={name} onChange={(e) => setName(e.target.value)} className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg shadow-sm" />
                 </div>
                 <div>
                     <label htmlFor="storeSlug" className="block text-sm font-medium text-slate-600">URL Toko Kustom</label>
                     <div className="flex items-center mt-1">
                         <span className="px-3 py-2 bg-slate-100 border border-r-0 border-slate-300 rounded-l-lg text-slate-500 text-sm">kamaroto.com/toko/</span>
-                        <input type="text" id="storeSlug" defaultValue="bengkel-maju-jaya" className="block w-full px-4 py-2 border border-slate-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                        <input type="text" id="storeSlug" value={slug} onChange={(e) => setSlug(e.target.value)} className="block w-full px-4 py-2 border border-slate-300 rounded-r-lg shadow-sm" />
                     </div>
                 </div>
             </div>
             <div>
                 <label htmlFor="aboutStore" className="block text-sm font-medium text-slate-600">Tentang Toko</label>
-                <textarea id="aboutStore" defaultValue={storeData.about} rows="5" className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+                <textarea id="aboutStore" value={about} onChange={(e) => setAbout(e.target.value)} rows="5" className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg shadow-sm"></textarea>
             </div>
 
-            {/* Bagian Jam Operasional */}
             <div>
                 <h3 className="text-lg font-semibold text-slate-800 border-b pb-2 mb-4">Jam Operasional</h3>
                 <div className="space-y-3">
-                    {['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'].map(day => (
-                        <div key={day} className="grid grid-cols-3 items-center gap-4">
+                    {Object.keys(openHours).map(day => (
+                        <div key={day} className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
                             <span className="font-medium text-slate-700">{day}</span>
-                            <input type="time" defaultValue="08:00" className="px-3 py-1.5 border border-slate-300 rounded-lg shadow-sm w-full" />
-                            <input type="time" defaultValue="17:00" className="px-3 py-1.5 border border-slate-300 rounded-lg shadow-sm w-full" />
+                            <input type="time" value={openHours[day].open} onChange={(e) => handleTimeChange(day, 'open', e.target.value)} disabled={!openHours[day].isOpen} className="px-3 py-1.5 border border-slate-300 rounded-lg shadow-sm w-full disabled:bg-slate-100" />
+                            <input type="time" value={openHours[day].close} onChange={(e) => handleTimeChange(day, 'close', e.target.value)} disabled={!openHours[day].isOpen} className="px-3 py-1.5 border border-slate-300 rounded-lg shadow-sm w-full disabled:bg-slate-100" />
+                            <label className="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" checked={!openHours[day].isOpen} onChange={() => handleDayToggle(day)} className="h-4 w-4 rounded text-orange-600 border-gray-300" />
+                                <span>Libur</span>
+                            </label>
                         </div>
                     ))}
                 </div>
             </div>
 
             <div className="flex justify-end pt-4 border-t">
-                <button className="cursor-pointer px-6 py-2 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 transition-colors">Simpan Perubahan</button>
+                <button onClick={handleSaveChanges} disabled={isSaving} className="cursor-pointer px-6 py-2 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600 transition-colors disabled:bg-slate-400">
+                    {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
             </div>
         </div>
     );
@@ -135,13 +234,28 @@ const TransactionHistoryTab = () => {
 
 
 const ItemCard = ({ item }) => {
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    const nextImage = (e) => {
+        e.stopPropagation();
+        if (item.media && item.media.length > 1) {
+            setCurrentImageIndex((prevIndex) => (prevIndex + 1) % item.media.length);
+        }
+    };
+
+    const prevImage = (e) => {
+        e.stopPropagation();
+        if (item.media && item.media.length > 1) {
+            setCurrentImageIndex((prevIndex) => (prevIndex - 1 + item.media.length) % item.media.length);
+        }
+    };
+
     const renderCardDetails = () => {
         if (item.type === 'VEHICLE' && item.vehicleDetail) {
             return (
                 <div className="flex justify-between text-sm text-slate-500 mt-2 border-t pt-2">
-                    <span>{item.vehicleDetail.brand}</span>
-                    <span>{item.vehicleDetail.year}</span>
-                    <span>{item.vehicleDetail.plateNumber}</span>
+                    <span>{item.vehicleDetail.brand} {item.vehicleDetail.year}</span>
+                    <span>{item.vehicleDetail.odometer?.toLocaleString('id-ID') || 'N/A'} km</span>
                 </div>
             );
         }
@@ -149,18 +263,33 @@ const ItemCard = ({ item }) => {
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-all duration-300 flex flex-col">
-            <img 
-                src={item.media && item.media.length > 0 ? `http://localhost:3000${item.media[0].url}` : 'https://placehold.co/400x300/e2e8f0/64748b?text=No+Image'} 
-                alt={item.title} 
-                className="w-full h-40 object-cover" 
-            />
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-all duration-300 flex flex-col group">
+            <div className="relative w-full h-48">
+                <img
+                    src={item.media && item.media.length > 0 ? `http://localhost:3000${item.media[currentImageIndex].url}` : 'https://placehold.co/400x300/e2e8f0/64748b?text=No+Image'}
+                    alt={item.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                {item.media && item.media.length > 1 && (
+                    <>
+                        <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-40 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">&lt;</button>
+                        <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-40 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">&gt;</button>
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-1.5">
+                            {item.media.map((_, index) => (
+                                <div key={index} className={`w-2 h-2 rounded-full ${index === currentImageIndex ? 'bg-white' : 'bg-white/50'}`}></div>
+                            ))}
+                        </div>
+                    </>
+                )}
+            </div>
             <div className="p-4 flex-grow flex flex-col">
-                <h3 className="font-bold text-slate-800 truncate">{item.title}</h3>
-                <p className="text-xl font-bold text-orange-600 mt-2">Rp {parseFloat(item.price).toLocaleString('id-ID')}</p>
-                <div className="flex-grow mt-2">
+                <h3 className="font-bold text-slate-800 text-lg">{item.title}</h3>
+                <p className="text-sm text-slate-500 mt-1 line-clamp-2 flex-grow">{item.description}</p>
+
+                <div className="mt-3">
                     {renderCardDetails()}
                 </div>
+                <p className="text-2xl font-extrabold text-orange-600 mt-3">Rp {parseFloat(item.price).toLocaleString('id-ID')}</p>
             </div>
             <div className="p-4 bg-slate-50 flex justify-end space-x-2">
                 <button className="px-4 py-1.5 text-sm font-semibold text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200">Edit</button>
@@ -183,6 +312,8 @@ const StoreItemsTab = ({ businessType }) => {
             try {
                 const token = localStorage.getItem('token');
                 const response = await api.get('/mitra/products', { headers: { 'Authorization': `Bearer ${token}` } });
+                // [PERBAIKAN] Langsung gunakan data dari API, hapus data placeholder
+                console.log("Data produk yang diterima dari API:", response.data.data);
                 setProducts(response.data.data || []);
             } catch (err) {
                 setError('Gagal memuat produk. Silakan coba lagi nanti.');
@@ -192,7 +323,7 @@ const StoreItemsTab = ({ businessType }) => {
         };
         fetchProducts();
     }, []);
-    
+
     const getAddItemButtonText = () => {
         switch (businessType) {
             case 'jual_beli_kendaraan': return 'Tambah Kendaraan';
@@ -203,9 +334,9 @@ const StoreItemsTab = ({ businessType }) => {
     return (
         <div>
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <input type="text" placeholder="Cari Barang & Jasa" className="w-full md:max-w-xs pl-4 pr-4 py-2 border border-slate-300 rounded-lg"/>
+                <input type="text" placeholder="Cari Barang & Jasa" className="w-full md:max-w-xs pl-4 pr-4 py-2 border border-slate-300 rounded-lg" />
                 <button onClick={() => navigate('/mitra/store/add-item')} className="flex items-center gap-2 w-full md:w-auto justify-center px-5 py-2 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600">
-                    <PlusIcon/> {getAddItemButtonText()}
+                    <PlusIcon /> {getAddItemButtonText()}
                 </button>
             </div>
 
@@ -226,7 +357,6 @@ const StoreItemsTab = ({ businessType }) => {
     );
 };
 
-
 const StoreProfilePage = () => {
     const [activeTab, setActiveTab] = useState('store');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -234,20 +364,21 @@ const StoreProfilePage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const fetchProfile = async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) throw new Error("Sesi tidak valid.");
+            const response = await api.get('/mitra/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+            setProfileData(response.data);
+        } catch (err) {
+            setError(err.response?.data?.message || "Gagal memuat data toko.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchProfile = async () => {
-            setLoading(true);
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) throw new Error("Sesi tidak valid.");
-                const response = await api.get('/mitra/profile', { headers: { 'Authorization': `Bearer ${token}` } });
-                setProfileData(response.data);
-            } catch (err) {
-                setError(err.response?.data?.message || "Gagal memuat data toko.");
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchProfile();
     }, []);
 
@@ -259,8 +390,10 @@ const StoreProfilePage = () => {
         const storeData = {
             name: profileData.mitraProfile?.business_name,
             about: profileData.mitraProfile?.business_description,
-            profileImage: profileData.mitraProfile?.store_images ? `http://localhost:3000${profileData.mitraProfile.store_images}` : "https://placehold.co/128x128/e2e8f0/64748b?text=Logo",
-            bannerImage: "https://placehold.co/600x250/e2e8f0/64748b?text=Banner+Toko"
+            slug: profileData.mitraProfile?.business_slug,
+            openHours: profileData.mitraProfile?.openHours,
+            logoUrl: profileData.mitraProfile?.business_logo_url ? `http://localhost:3000${profileData.mitraProfile.business_logo_url}` : "https://placehold.co/128x128/e2e8f0/64748b?text=Logo",
+            bannerUrl: profileData.mitraProfile?.business_banner_url ? `http://localhost:3000${profileData.mitraProfile.business_banner_url}` : "https://placehold.co/600x250/e2e8f0/64748b?text=Banner"
         };
 
         switch (activeTab) {
@@ -270,7 +403,7 @@ const StoreProfilePage = () => {
                 return <TransactionHistoryTab />;
             case 'store':
             default:
-                return <StoreInfoTab storeData={storeData} />;
+                return <StoreInfoTab storeData={storeData} onUpdateSuccess={fetchProfile} />;
         }
     };
 
