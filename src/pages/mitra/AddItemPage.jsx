@@ -17,8 +17,8 @@ const VehicleForm = ({ vehicleDetail, handleDetailChange }) => (
             <input type="text" name="brand" id="brand" value={vehicleDetail.brand} onChange={handleDetailChange} placeholder="Contoh: Toyota" required className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg" />
         </div>
         <div>
-            <label htmlFor="plateNumber" className="block text-sm font-medium text-slate-600">Nomor Polisi</label>
-            <input type="text" name="plateNumber" id="plateNumber" value={vehicleDetail.plateNumber} onChange={handleDetailChange} placeholder="Contoh: B 1234 XYZ" required className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg" />
+            <label htmlFor="model" className="block text-sm font-medium text-slate-600">Model</label>
+            <input type="text" name="model" id="model" value={vehicleDetail.model} onChange={handleDetailChange} placeholder="Contoh: B 1234 XYZ" required className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg" />
         </div>
         <div>
             <label htmlFor="year" className="block text-sm font-medium text-slate-600">Tahun</label>
@@ -58,7 +58,7 @@ const AddItemPage = () => {
 
     // State untuk data spesifik kendaraan
     const [vehicleDetail, setVehicleDetail] = useState({
-        plateNumber: '', brand: '', year: '', odometer: '', color: '', transmission: 'Automatic'
+        brand: '', model: '', year: '', odometer: '', transmission: 'Automatic'
     });
 
     const [loading, setLoading] = useState(false);
