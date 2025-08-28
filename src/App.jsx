@@ -36,6 +36,8 @@ import JoinUs from './pages/JoinUs';
 import GabCo from './pages/GabCo';
 import GabMi from './pages/GabMi';
 import ScrollToTop from './components/ScrollToTop';
+import StoreProfilePage from './pages/mitra/StoreProfilePage';
+import AddItemPage from './pages/mitra/AddItemPage';
 
 export const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
@@ -145,6 +147,8 @@ function App() {
               <Route path="/captain/recruits" element={<ProtectedRoute><ReferredUsersPage /></ProtectedRoute>} />
 
               <Route path="/mitra/profile" element={<ProtectedRoute><MitraProfile /></ProtectedRoute>} />
+              <Route path="/mitra/store" element={<ProtectedRoute><StoreProfilePage /></ProtectedRoute>} />
+              <Route path="/mitra/store/add-item" element={<ProtectedRoute><AddItemPage /></ProtectedRoute>} />
 
               {/* Rute Pendaftaran Ulang */}
               <Route

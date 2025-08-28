@@ -17,8 +17,17 @@ import { InputField, SelectField } from '../../components/form/FormElements';
 const MenuIcon = () => <svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>;
 
 const mitraNavLinks = [
-    { to: '/mitra/profile', label: 'Profil Saya', icon: <img src="https://icongr.am/feather/user.svg?size=20&color=ffffff" alt="Profil" /> },
-];
+        { 
+            to: '/mitra/profile', 
+            label: 'Profil Saya', 
+            icon: <img src="https://icongr.am/feather/user.svg?size=20&color=currentColor" alt="Profil"/> 
+        },
+        { 
+            to: '/mitra/store', // <-- Arahkan ke halaman baru
+            label: 'Toko Saya',   // <-- Label baru
+            icon: <img src="https://icongr.am/feather/shopping-bag.svg?size=20&color=currentColor" alt="Toko"/> // <-- Ikon baru
+        },
+    ];
 
 const businessTypeMap = {
     'jual_beli_kendaraan': 'Jual Beli Kendaraan',
