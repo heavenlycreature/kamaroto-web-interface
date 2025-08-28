@@ -39,8 +39,8 @@ const StoreInfoTab = ({ storeData, onUpdateSuccess }) => {
             setName(storeData.name || '');
             setAbout(storeData.about || '');
             setSlug(storeData.slug || '');
-            setLogoPreview(storeData.profileImage || "https://placehold.co/128x128/e2e8f0/64748b?text=Logo");
-            setBannerPreview(storeData.bannerImage || "https://placehold.co/600x250/e2e8f0/64748b?text=Banner");
+            setLogoPreview(storeData.logoUrl || "https://placehold.co/128x128/e2e8f0/64748b?text=Logo");
+            setBannerPreview(storeData.bannerUrl || "https://placehold.co/600x250/e2e8f0/64748b?text=Banner");
 
             const initialHours = storeData.openHours || {};
             const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
@@ -89,8 +89,8 @@ const StoreInfoTab = ({ storeData, onUpdateSuccess }) => {
         formData.append('business_slug', slug); // Sesuaikan dengan field backend
         formData.append('openHours', JSON.stringify(openHours));
 
-        if (logoFile) formData.append('business_logo_url', logoFile); 
-        if (bannerFile) formData.append('business_banner_url', bannerFile);
+        if (logoFile) formData.append('logo', logoFile); 
+        if (bannerFile) formData.append('banner', bannerFile);
 
         try {
             const token = localStorage.getItem('token');
