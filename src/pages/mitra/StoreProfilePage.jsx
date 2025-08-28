@@ -234,6 +234,7 @@ const TransactionHistoryTab = () => {
 
 
 const ItemCard = ({ item }) => {
+    const navigate = useNavigate();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     const nextImage = (e) => {
@@ -292,7 +293,12 @@ const ItemCard = ({ item }) => {
                 <p className="text-2xl font-extrabold text-orange-600 mt-3">Rp {parseFloat(item.price).toLocaleString('id-ID')}</p>
             </div>
             <div className="p-4 bg-slate-50 flex justify-end space-x-2">
-                <button className="px-4 py-1.5 text-sm font-semibold text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200">Edit</button>
+                <button 
+                    onClick={() => navigate(`/mitra/store/product/${item.id}`)}
+                    className="px-4 py-1.5 text-sm font-semibold text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200"
+                >
+                    Edit
+                </button>
                 <button className="px-4 py-1.5 text-sm font-semibold text-red-600 bg-red-100 rounded-md hover:bg-red-200">Hapus</button>
             </div>
         </div>
@@ -335,8 +341,8 @@ const StoreItemsTab = ({ businessType }) => {
         <div>
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <input type="text" placeholder="Cari Barang & Jasa" className="w-full md:max-w-xs pl-4 pr-4 py-2 border border-slate-300 rounded-lg" />
-                <button onClick={() => navigate('/mitra/store/add-item')} className="flex items-center gap-2 w-full md:w-auto justify-center px-5 py-2 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600">
-                    <PlusIcon /> {getAddItemButtonText()}
+                <button onClick={() => navigate('/mitra/store/product/new')} className="flex items-center gap-2 w-full md:w-auto justify-center px-5 py-2 bg-orange-500 text-white font-semibold rounded-lg shadow-md hover:bg-orange-600">
+                    <PlusIcon/> {getAddItemButtonText()}
                 </button>
             </div>
 

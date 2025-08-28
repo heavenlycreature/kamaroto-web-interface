@@ -38,6 +38,8 @@ import GabMi from './pages/GabMi';
 import ScrollToTop from './components/ScrollToTop';
 import StoreProfilePage from './pages/mitra/StoreProfilePage';
 import AddItemPage from './pages/mitra/AddItemPage';
+import EditItemPage from './pages/mitra/EditItemPage';
+import ProductFormPage from './pages/mitra/ProductFormPage';
 
 export const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
@@ -148,7 +150,8 @@ function App() {
 
               <Route path="/mitra/profile" element={<ProtectedRoute><MitraProfile /></ProtectedRoute>} />
               <Route path="/mitra/store" element={<ProtectedRoute><StoreProfilePage /></ProtectedRoute>} />
-              <Route path="/mitra/store/add-item" element={<ProtectedRoute><AddItemPage /></ProtectedRoute>} />
+              <Route path="/mitra/store/product/new" element={<ProtectedRoute><ProductFormPage /></ProtectedRoute>} />
+              <Route path="/mitra/store/product/:productId" element={<ProtectedRoute><ProductFormPage /></ProtectedRoute>} />
 
               {/* Rute Pendaftaran Ulang */}
               <Route
