@@ -37,8 +37,8 @@ import GabCo from './pages/GabCo';
 import GabMi from './pages/GabMi';
 import ScrollToTop from './components/ScrollToTop';
 import StoreProfilePage from './pages/mitra/StoreProfilePage';
-import AddItemPage from './pages/mitra/AddItemPage';
-import EditItemPage from './pages/mitra/EditItemPage';
+// import AddItemPage from './pages/mitra/AddItemPage';
+// import EditItemPage from './pages/mitra/EditItemPage';
 import ProductFormPage from './pages/mitra/ProductFormPage';
 import WorkshopManagementPage from './pages/mitra/WorkshopManagementPage';
 

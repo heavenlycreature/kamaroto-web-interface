@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 
-const MechanicModal = ({ isOpen, onClose, onSave, mechanic }) => {
+const StaffModal = ({ isOpen, onClose, onSave, mechanic }) => {
     const [name, setName] = useState('');
     const [status, setStatus] = useState('AVAILABLE');
     const [skillset, setSkillset] = useState('');
@@ -94,4 +94,4 @@ const MechanicModal = ({ isOpen, onClose, onSave, mechanic }) => {
     );
 };
 
-export default MechanicModal;
+export default StaffModal;
