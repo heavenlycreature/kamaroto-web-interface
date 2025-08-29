@@ -40,6 +40,7 @@ import StoreProfilePage from './pages/mitra/StoreProfilePage';
 import AddItemPage from './pages/mitra/AddItemPage';
 import EditItemPage from './pages/mitra/EditItemPage';
 import ProductFormPage from './pages/mitra/ProductFormPage';
+import WorkshopManagementPage from './pages/mitra/WorkshopManagementPage';
 
 export const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
@@ -152,6 +153,7 @@ function App() {
               <Route path="/mitra/store" element={<ProtectedRoute><StoreProfilePage /></ProtectedRoute>} />
               <Route path="/mitra/store/product/new" element={<ProtectedRoute><ProductFormPage /></ProtectedRoute>} />
               <Route path="/mitra/store/product/:productId" element={<ProtectedRoute><ProductFormPage /></ProtectedRoute>} />
+              <Route path="/mitra/workshop" element={<ProtectedRoute><WorkshopManagementPage /></ProtectedRoute>} />
 
               {/* Rute Pendaftaran Ulang */}
               <Route

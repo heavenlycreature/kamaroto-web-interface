@@ -1,7 +1,7 @@
 // pages/mitra/MitraProfile.jsx
 // Versi final dengan update pada input Status PIC, Platform Medsos, dan Badan Usaha.
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/api';
 import { useFormHandlers } from '../../hooks/useFormHandlers';
@@ -15,19 +15,6 @@ import { InputField, SelectField } from '../../components/form/FormElements';
 
 // --- Komponen Ikon ---
 const MenuIcon = () => <svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>;
-
-const mitraNavLinks = [
-        { 
-            to: '/mitra/profile', 
-            label: 'Profil Saya', 
-            icon: <img src="https://icongr.am/feather/user.svg?size=20&color=currentColor" alt="Profil"/> 
-        },
-        { 
-            to: '/mitra/store', // <-- Arahkan ke halaman baru
-            label: 'Toko Saya',   // <-- Label baru
-            icon: <img src="https://icongr.am/feather/shopping-bag.svg?size=20&color=currentColor" alt="Toko"/> // <-- Ikon baru
-        },
-    ];
 
 const businessTypeMap = {
     'jual_beli_kendaraan': 'Jual Beli Kendaraan',
@@ -44,7 +31,7 @@ const reverseBusinessTypeMap = Object.fromEntries(
     Object.entries(businessTypeMap).map(([key, value]) => [value, key])
 );
 const MitraProfile = () => {
- const [isEditing, setIsEditing] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [originalData, setOriginalData] = useState(null);
@@ -74,13 +61,41 @@ const MitraProfile = () => {
     const [selectedBusinessAddress, setSelectedBusinessAddress] = useState(initialAddress);
     const { addressOptions: businessAddressOptions, handleAddressChange: handleBusinessAddressChange } = useAddressDropdown(selectedBusinessAddress, setSelectedBusinessAddress);
 
+    const mitraNavLinks = useMemo(() => {
+    const baseLinks = [
+        { 
+            to: '/mitra/profile', 
+            label: 'Profil Saya', 
+            icon: <img src="https://icongr.am/feather/user.svg?size=20&color=currentColor" alt="Profil"/> 
+        }
+    ];
+
+    const businessTypeKey = reverseBusinessTypeMap[formData.business_type];
+
+    if (['jual_beli_kendaraan', 'jual_beli_sparepart'].includes(businessTypeKey)) {
+        baseLinks.push({ 
+            to: '/mitra/store',
+            label: 'Toko Saya',
+            icon: <img src="https://icongr.am/feather/shopping-bag.svg?size=20&color=currentColor" alt="Toko"/>
+        });
+    } else if (['bengkel', 'cuci_kendaraan', 'sewa_kendaraan'].includes(businessTypeKey)) {
+        baseLinks.push({ 
+            to: '/mitra/workshop',
+            label: 'Manajemen Bengkel',
+            icon: <img src="https://icongr.am/feather/tool.svg?size=20&color=currentColor" alt="Bengkel"/>
+        });
+    }
+        
+    return baseLinks;
+}, [formData.business_type]);
+
     // --- Data Fetching ---
     useEffect(() => {
         const fetchProfile = async () => {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) throw new Error("Sesi tidak valid.");
-                
+
                 const response = await api.get('/mitra/profile', { headers: { 'Authorization': `Bearer ${token}` } });
                 const user = response.data;
                 const mitraProfile = user.mitraProfile;
@@ -140,9 +155,9 @@ const MitraProfile = () => {
             const payload = {
                 ...formData,
                 ...selectedOwnerAddress,
-                ...selectedBusinessAddress, 
+                ...selectedBusinessAddress,
             };
-            
+
             if (payload.business_type) {
                 payload.business_type = reverseBusinessTypeMap[payload.business_type] || payload.business_type;
             }
@@ -152,7 +167,7 @@ const MitraProfile = () => {
 
             const endpoint = isResubmit ? '/resubmit' : '/mitra/profile/edit';
             await api.put(endpoint, payload, { headers: { 'Authorization': `Bearer ${token}` } });
-            
+
             setOriginalData({ formData, ownerAddress: selectedOwnerAddress, businessAddress: selectedBusinessAddress });
             setIsEditing(false);
             const successMessage = isResubmit ? 'Data berhasil dikirim ulang! Akun Anda akan ditinjau kembali.' : 'Profil berhasil diperbarui!';
@@ -179,28 +194,28 @@ const MitraProfile = () => {
         return parts.filter(part => part).join(', ') || '-';
     };
 
-      const handlePasswordChange = async (passwords) => {
-            setLoading(true);
-            setSaveMessage({ type: '', text: '' });
-            try {
-                const token = localStorage.getItem('token');
-                await api.post('/api/profile/change-password', passwords, { headers: { 'Authorization': `Bearer ${token}` } });
-                setSaveMessage({ type: 'success', text: 'Password berhasil diubah.' });
-                setIsPasswordModalOpen(false);
-            } catch (err) {
-                const errorMessage = err.response?.data?.message || "Gagal mengubah password.";
-                setSaveMessage({ type: 'error', text: errorMessage });
-            } finally {
-                setLoading(false);
-            }
-        };
+    const handlePasswordChange = async (passwords) => {
+        setLoading(true);
+        setSaveMessage({ type: '', text: '' });
+        try {
+            const token = localStorage.getItem('token');
+            await api.post('/api/profile/change-password', passwords, { headers: { 'Authorization': `Bearer ${token}` } });
+            setSaveMessage({ type: 'success', text: 'Password berhasil diubah.' });
+            setIsPasswordModalOpen(false);
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || "Gagal mengubah password.";
+            setSaveMessage({ type: 'error', text: errorMessage });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
     if (error) return <div className="flex items-center justify-center min-h-screen text-red-500">{error}</div>;
 
     // [LOGIKA BARU] Tampilkan halaman rejected jika statusnya rejected
     if (formData.status === 'rejected' && !isEditing) {
-        return <RejectedStatusView user={{...formData, name: formData.business_name}} onEditClick={() => setIsEditing(true)} />;
+        return <RejectedStatusView user={{ ...formData, name: formData.business_name }} onEditClick={() => setIsEditing(true)} />;
     }
 
     const selectClassName = "block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-200";
@@ -270,23 +285,23 @@ const MitraProfile = () => {
 
                                 <InfoCard title="Informasi Bisnis" description="Detail mengenai usaha Anda." isEditing={isEditing} onEdit={() => setIsEditing(true)}>
                                     <dl className="divide-y divide-gray-200">
-                                         <ProfileField label="Jenis Usaha">
-                                    {isEditing ? (
-                                        <select
-                                            name="business_type"
-                                            value={formData.business_type}
-                                            onChange={handleInputChange}
-                                            className="block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                                        >
-                                            <option value="" disabled>Pilih Jenis Usaha</option>
-                                            {Object.values(businessTypeMap).map(value => (
-                                                <option key={value} value={value}>{value}</option>
-                                            ))}
-                                        </select>
-                                    ) : (
-                                        <span className="font-semibold">{formData.business_type || '-'}</span>
-                                    )}
-                                </ProfileField>
+                                        <ProfileField label="Jenis Usaha">
+                                            {isEditing ? (
+                                                <select
+                                                    name="business_type"
+                                                    value={formData.business_type}
+                                                    onChange={handleInputChange}
+                                                    className="block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                                                >
+                                                    <option value="" disabled>Pilih Jenis Usaha</option>
+                                                    {Object.values(businessTypeMap).map(value => (
+                                                        <option key={value} value={value}>{value}</option>
+                                                    ))}
+                                                </select>
+                                            ) : (
+                                                <span className="font-semibold">{formData.business_type || '-'}</span>
+                                            )}
+                                        </ProfileField>
 
                                         {/* [PERUBAHAN] Menggunakan kode yang Anda berikan untuk Badan Usaha & Nama Usaha */}
                                         <ProfileField label="Badan Usaha">
@@ -376,10 +391,10 @@ const MitraProfile = () => {
                                 <InfoCard title="Keamanan Akun" description="Ubah password Anda secara berkala.">
                                     <dl className="divide-y divide-gray-200">
                                         <ProfileField label="Email Akun" value={formData.email} isEditing={false} />
-                                        <ProfileField 
-                                            label="Status Verifikasi Email" 
-                                            value={formData.email_is_verified ? 'Ya' : 'Tidak'} 
-                                            isEditing={false} 
+                                        <ProfileField
+                                            label="Status Verifikasi Email"
+                                            value={formData.email_is_verified ? 'Ya' : 'Tidak'}
+                                            isEditing={false}
                                         />
                                         <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5">
                                             <dt className="text-sm font-medium text-gray-500">Password</dt>
