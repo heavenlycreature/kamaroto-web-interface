@@ -24,7 +24,7 @@ const VehicleForm = ({ vehicleDetail, handleDetailChange }) => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
             <label htmlFor="brand" className="block text-sm font-medium text-slate-600">Merek</label>
-            <input type="text" name="brand" id="brand" value={vehicleDetail.brand} onChange={handleDetailChange} placeholder="Contoh: Toyota" required className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg"/>
+            <input type="text" name="brand" id="brand" value={vehicleDetail.brand} onChange={handleDetailChange} placeholder="Contoh: Toyota" required className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg" />
         </div>
         <div>
             <label htmlFor="model" className="block text-sm font-medium text-slate-600">Model</label>
@@ -67,7 +67,7 @@ const AddItemPage = () => {
     const navigate = useNavigate();
     const [businessType, setBusinessType] = useState('');
     const [loadingProfile, setLoadingProfile] = useState(true);
-    
+
     // State untuk data umum
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -77,7 +77,7 @@ const AddItemPage = () => {
     const [status, setStatus] = useState('ACTIVE');
     const [mediaFiles, setMediaFiles] = useState([]);
     const [mediaPreviews, setMediaPreviews] = useState([]);
-    
+
     // State untuk data spesifik kendaraan
     const [vehicleDetail, setVehicleDetail] = useState({
         brand: '', model: '', year: '', odometer: '',
@@ -117,11 +117,11 @@ const AddItemPage = () => {
             setMediaPreviews(prev => [...prev, ...previews]);
         }
     };
-    
+
     const handlePriceChange = (e) => {
         const rawValue = e.target.value.replace(/[^0-9]/g, ''); // Hapus semua karakter non-angka
         setPrice(rawValue); // Simpan nilai mentah tanpa koma
-        
+
         if (rawValue) {
             setDisplayPrice(parseInt(rawValue, 10).toLocaleString('id-ID')); // Format dengan koma untuk tampilan
         } else {
@@ -135,7 +135,7 @@ const AddItemPage = () => {
         setError('');
 
         const formData = new FormData();
-        
+
         // [PERBAIKAN] Konversi tipe data sebelum mengirim
         formData.append('type', 'VEHICLE');
         formData.append('title', title);
@@ -143,12 +143,12 @@ const AddItemPage = () => {
         formData.append('stock', parseInt(stock, 10)); // Kirim sebagai integer
         formData.append('status', status);
         formData.append('description', description);
-        
-        const fullVehicleDetail = { 
-            ...vehicleDetail, 
+
+        const fullVehicleDetail = {
+            ...vehicleDetail,
             year: vehicleDetail.year,
             odometer: vehicleDetail.odometer,
-            condition: vehicleDetail.condition 
+            condition: vehicleDetail.condition
         };
         formData.append('vehicleDetail', JSON.stringify(fullVehicleDetail));
 
@@ -210,17 +210,7 @@ const AddItemPage = () => {
                                 <div>
                                     <label htmlFor="price" className="block text-sm font-medium text-slate-600">Harga</label>
                                     {/* [PERUBAHAN] Input harga sekarang menggunakan displayPrice dan handlePriceChange */}
-                                    <input 
-                                        type="text" 
-                                        inputMode="numeric" 
-                                        name="price" 
-                                        id="price" 
-                                        value={displayPrice} 
-                                        onChange={handlePriceChange} 
-                                        required 
-                                        className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg" 
-                                        placeholder="Rp" 
-                                    />
+                                    <input type="text" inputMode="numeric" name="price" id="price" value={displayPrice} onChange={handlePriceChange} required className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Rp" />
                                 </div>
                                 <div>
                                     <label htmlFor="stock" className="block text-sm font-medium text-slate-600">Stok</label>
@@ -238,32 +228,32 @@ const AddItemPage = () => {
                         <h2 className="text-xl font-semibold text-slate-800 border-b pb-4 mb-6">Detail Kendaraan</h2>
                         {renderDynamicForm()}
                     </div>
-                    
+
                     <div className="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
                         <h2 className="text-xl font-semibold text-slate-800 border-b pb-4 mb-6">Galeri Foto</h2>
                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
                             {mediaPreviews.map((preview, index) => (
                                 <div key={index} className="relative aspect-square group">
-                                    <img src={preview} alt={`preview ${index}`} className="w-full h-full object-cover rounded-lg"/>
+                                    <img src={preview} alt={`preview ${index}`} className="w-full h-full object-cover rounded-lg" />
                                 </div>
                             ))}
                             <label className="aspect-square flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50">
                                 <PlusIcon />
                                 <span className="text-xs text-slate-500 mt-1">Tambah Foto</span>
-                                <input type="file" multiple onChange={handleImageUpload} className="hidden" accept="image/*"/>
+                                <input type="file" multiple onChange={handleImageUpload} className="hidden" accept="image/*" />
                             </label>
                         </div>
                     </div>
 
                     <div className="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
-                         <h2 className="text-xl font-semibold text-slate-800 border-b pb-4 mb-6">Pengaturan Tambahan</h2>
-                         <div className="space-y-4">
-                            <ToggleSwitch 
-                                label="Produk Aktif (Tampil di Toko)" 
-                                enabled={status === 'ACTIVE'} 
+                        <h2 className="text-xl font-semibold text-slate-800 border-b pb-4 mb-6">Pengaturan Tambahan</h2>
+                        <div className="space-y-4">
+                            <ToggleSwitch
+                                label="Produk Aktif (Tampil di Toko)"
+                                enabled={status === 'ACTIVE'}
                                 setEnabled={(isEnabled) => setStatus(isEnabled ? 'ACTIVE' : 'DRAFT')}
                             />
-                         </div>
+                        </div>
                     </div>
 
                     {error && <p className="text-center text-red-500 bg-red-50 p-3 rounded-lg">{error}</p>}

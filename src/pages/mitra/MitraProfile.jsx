@@ -88,7 +88,7 @@ const MitraProfile = () => {
 
                 const initialFormData = {
                     email: user.email, status: user.status,
-                    avatar: mitraProfile.store_images ? `http://localhost:3000${mitraProfile.store_images}` : "https://placehold.co/96x96/ffffff/ea580c?text=Mitra",
+                    avatar: mitraProfile.business_logo_url ? `http://localhost:3000${mitraProfile.business_logo_url}` : "https://placehold.co/96x96/ffffff/ea580c?text=Mitra",
                     pic_name: mitraProfile.pic_name || "", pic_phone: mitraProfile.pic_phone || "", pic_email: mitraProfile.pic_email || "", pic_status: mitraProfile.pic_status || "",
                     owner_name: mitraProfile.owner_name || "", owner_phone: mitraProfile.owner_phone || "", owner_email: mitraProfile.owner_email || "", owner_ktp: mitraProfile.owner_ktp || "",
                     business_type: businessTypeMap[mitraProfile.business_type] || mitraProfile.business_type || "", business_entity: mitraProfile.business_entity || "", business_name: mitraProfile.business_name || "",

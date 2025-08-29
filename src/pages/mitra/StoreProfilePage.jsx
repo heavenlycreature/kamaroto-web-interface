@@ -454,6 +454,7 @@ const StoreProfilePage = () => {
             <div className="md:flex md:min-h-screen">
                 <ProfileSidebar
                     user={{
+                        avatar: profileData?.mitraProfile?.business_logo_url ? `http://localhost:3000${profileData.mitraProfile.business_logo_url}` : 'https://placehold.co/128x128/e2e8f0/64748b?text=Logo',
                         name: profileData?.mitraProfile?.business_name || 'Mitra Usaha',
                         email: profileData?.email || '...',
                         status: profileData?.status

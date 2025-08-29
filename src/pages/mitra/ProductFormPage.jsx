@@ -4,15 +4,20 @@ import api from "../../api/api";
 
 // --- Komponen Ikon ---
 const BackIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="15 18 9 12 15 6"></polyline>
-    </svg>
+  <img
+    src="https://icongr.am/feather/arrow-left.svg?size=20&color=4b5563"
+    alt="Back"
+    className="inline-block"
+  />
 );
+
+// Ganti PlusIcon
 const PlusIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
+  <img
+    src="https://icongr.am/feather/plus.svg?size=20&color=4b5563"
+    alt="Plus"
+    className="inline-block"
+  />
 );
 
 const VehicleForm = ({ vehicleDetail, handleDetailChange }) => (
@@ -30,26 +35,26 @@ const VehicleForm = ({ vehicleDetail, handleDetailChange }) => (
             <input type="number" name="year" id="year" value={vehicleDetail.year} onChange={handleDetailChange} placeholder="Contoh: 2019" required className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg" />
         </div>
         <div>
-            <label htmlFor="odometer" className="block text-sm font-medium text-slate-600">Jarak Tempuh (km)</label>
+            <label htmlFor="odometer" className="block text-sm font-medium text-slate-600">Jarak Tempuh/Odometer (km)</label>
             <input type="number" name="odometer" id="odometer" value={vehicleDetail.odometer} onChange={handleDetailChange} placeholder="Contoh: 45000" required className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg" />
         </div>
         <div>
             <label htmlFor="transmission" className="block text-sm font-medium text-slate-600">Transmisi</label>
-            <select name="transmission" id="transmission" value={vehicleDetail.transmission} onChange={handleDetailChange} required className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg">
+            <select name="transmission" id="transmission" value={vehicleDetail.transmission} onChange={handleDetailChange} required className="cursor-pointer mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg">
                 <option>Automatic</option>
                 <option>Manual</option>
             </select>
         </div>
         <div>
             <label htmlFor="fuel" className="block text-sm font-medium text-slate-600">Bahan Bakar</label>
-            <select name="fuel" id="fuel" value={vehicleDetail.fuel} onChange={handleDetailChange} required className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg">
+            <select name="fuel" id="fuel" value={vehicleDetail.fuel} onChange={handleDetailChange} required className="cursor-pointer mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg">
                 <option>Bensin</option>
                 <option>Listrik</option>
             </select>
         </div>
         <div>
             <label htmlFor="condition" className="block text-sm font-medium text-slate-600">Kondisi</label>
-            <select name="condition" id="condition" value={vehicleDetail.condition} onChange={handleDetailChange} required className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg">
+            <select name="condition" id="condition" value={vehicleDetail.condition} onChange={handleDetailChange} required className="cursor-pointer mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg">
                 <option>Sangat Baik</option>
                 <option>Baik</option>
                 <option>Cukup</option>
@@ -74,6 +79,7 @@ const ProductFormPage = () => {
 
     const [loading, setLoading] = useState(isEditMode);
     const [saving, setSaving] = useState(false);
+    const [modalState, setModalState] = useState({ isOpen: false, type: '', title: '', message: '' });
     const [error, setError] = useState("");
 
     // --- Fetch data kalau edit mode ---
@@ -142,6 +148,16 @@ const ProductFormPage = () => {
     
 
     // --- Handlers ---
+
+    const formatNumber = (value) => {
+        if (!value) return "";
+        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); 
+    };
+
+    const parseNumber = (value) => {
+        return value.replace(/,/g, "");
+    };
+
     const handleInputChange = e => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -212,20 +228,36 @@ const ProductFormPage = () => {
             const token = localStorage.getItem("token");
             let response;
             if (isEditMode) {
-                // Panggil API PUT untuk update
-                response = await api.put(`/mitra/products/${productId}`, dataToSend, { headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" } });
-                alert("Produk berhasil diperbarui!");
+                response = await api.put(`/mitra/products/${productId}`, dataToSend, {
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
+                });
+                setModalState({
+                isOpen: true,
+                type: "success",
+                title: "Berhasil",
+                message: "Produk berhasil diperbarui!",
+                });
             } else {
-                // Panggil API POST untuk create
-                response = await api.post("/mitra/products", dataToSend, { headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" } });
-                alert("Produk berhasil dibuat!");
+                response = await api.post("/mitra/products", dataToSend, {
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
+                });
+                setModalState({
+                isOpen: true,
+                type: "success",
+                title: "Berhasil",
+                message: "Produk berhasil dibuat!",
+                });
             }
-            navigate("/mitra/store");
-        } catch (err) {
-            setError(err.response?.data?.message || `Gagal ${isEditMode ? 'memperbarui' : 'membuat'} produk.`);
-        } finally {
+            } catch (err) {
+            setModalState({
+                isOpen: true,
+                type: "error",
+                title: "Gagal",
+                message: err.response?.data?.message || `Gagal ${isEditMode ? "memperbarui" : "membuat"} produk.`,
+            });
+            } finally {
             setSaving(false);
-        }
+            }
     };
 
     if (loading) return <div className="flex items-center justify-center min-h-screen">Memuat data produk...</div>;
@@ -254,15 +286,94 @@ const ProductFormPage = () => {
                     <p className="text-red-500 bg-red-100 p-4 rounded-lg text-center">{error}</p>
                 ) : (
                 <form onSubmit={handleSubmit} className="space-y-8">
+                    {modalState.isOpen && (
+                        <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50 transition-opacity duration-300">
+                            <div
+                            className={`bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full relative transform transition-all duration-300 scale-100 opacity-100`}
+                            >
+                            {/* Ikon Status */}
+                            <div className="flex justify-center mb-4">
+                                {modalState.type === "success" && (
+                                <div className="w-12 h-12 flex items-center justify-center rounded-full bg-green-100 text-green-600 text-2xl">
+                                    ✔
+                                </div>
+                                )}
+                                {modalState.type === "error" && (
+                                <div className="w-12 h-12 flex items-center justify-center rounded-full bg-red-100 text-red-600 text-2xl">
+                                    ✖
+                                </div>
+                                )}
+                                {modalState.type === "info" && (
+                                <div className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 text-2xl">
+                                    ℹ
+                                </div>
+                                )}
+                            </div>
+
+                            {/* Title + Message */}
+                            <h3 className="text-xl font-semibold text-slate-800 text-center">
+                                {modalState.title}
+                            </h3>
+                            <p className="text-slate-600 text-center mt-2">{modalState.message}</p>
+
+                            {/* Tombol */}
+                            <div className="flex justify-center mt-6">
+                                <button
+                                onClick={() => {
+                                    setModalState({ isOpen: false, type: "", title: "", message: "" });
+                                    if (modalState.type === "success") {
+                                    navigate("/mitra/store");
+                                    }
+                                }}
+                                className={`px-5 py-2 rounded-xl font-medium transition ${
+                                    modalState.type === "success"
+                                    ? "bg-green-500 hover:bg-green-600 text-white"
+                                    : modalState.type === "error"
+                                    ? "bg-red-500 hover:bg-red-600 text-white"
+                                    : "bg-blue-500 hover:bg-blue-600 text-white"
+                                }`}
+                                >
+                                OK
+                                </button>
+                            </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Info Umum */}
-                    <div className="bg-white p-6 rounded-2xl shadow-lg">
-                        <h2 className="text-xl font-semibold border-b pb-4 mb-6">Informasi Produk</h2>
+                    <div className="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
+                        <h2 className="text-xl font-semibold text-slate-800 border-b pb-4 mb-6">Informasi Produk</h2>
                         <div className="space-y-4">
-                            <input name="title" value={formData.title} onChange={handleInputChange} placeholder="Judul" className="w-full border p-2 rounded" />
-                            <input type="number" name="price" value={formData.price} onChange={handleInputChange} placeholder="Harga" className="w-full border p-2 rounded" />
-                            <input type="number" name="stock" value={formData.stock} onChange={handleInputChange} placeholder="Stok" className="w-full border p-2 rounded" />
-                            <textarea name="description" value={formData.description} onChange={handleInputChange} placeholder="Deskripsi" className="w-full border p-2 rounded" />
-                            
+                            <div>
+                                <label htmlFor="title" className="block text-sm font-medium text-slate-600">Judul Iklan</label>
+                                <input name="title" value={formData.title} onChange={handleInputChange} placeholder="Judul" className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label htmlFor="price" className="block text-sm font-medium text-slate-600">Harga</label>
+                                    <input
+                                        type="text"
+                                        name="price"
+                                        value={formatNumber(formData.price)}
+                                        onChange={(e) => {
+                                        const rawValue = parseNumber(e.target.value);
+                                        if (!isNaN(rawValue)) {
+                                            setFormData(prev => ({ ...prev, price: rawValue }));
+                                        }
+                                        }}
+                                        placeholder="Harga"
+                                        className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg"
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="stock" className="block text-sm font-medium text-slate-600">Stok</label>
+                                    <input type="number" name="stock" value={formData.stock} onChange={handleInputChange} placeholder="Stok" className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg" />
+                                </div>
+                            </div>                            
+                            <div>
+                                <label htmlFor="description" className="block text-sm font-medium text-slate-600">Deskripsi</label>
+                                <textarea name="description" value={formData.description} onChange={handleInputChange} placeholder="Deskripsi" rows="5" className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-lg" />
+                            </div>
                         </div>
                     </div>
 
@@ -281,7 +392,17 @@ const ProductFormPage = () => {
                             {mediaItems.map(img => (
                                 <div key={img.id} className="relative">
                                     <img src={img.url} className="w-full h-full object-cover rounded" />
-                                    <button type="button" onClick={() => removeImage(img.id)} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded">X</button>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeImage(img.id)}
+                                        className="cursor-pointer absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                                    >
+                                        <img
+                                        src="https://icongr.am/feather/x.svg?size=16&color=ffffff"
+                                        alt="Remove"
+                                        className="w-4 h-4"
+                                        />
+                                    </button>
                                 </div>
                             ))}
                             <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed cursor-pointer">
