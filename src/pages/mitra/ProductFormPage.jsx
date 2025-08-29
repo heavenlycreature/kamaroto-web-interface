@@ -68,6 +68,8 @@ const ProductFormPage = () => {
     const [formData, setFormData] = useState({ title: "", description: "", price: "", stock: 1, status: "ACTIVE" });
     const [vehicleDetail, setVehicleDetail] = useState({ brand: "", model: "", year: "", odometer: "" });
     const [mediaItems, setMediaItems] = useState([]);
+    const [productType, setProductType] = useState(null);
+    const [mitraBusinessType, setMitraBusinessType] = useState('');
     const [initialData, setInitialData] = useState(null);
 
     const [loading, setLoading] = useState(isEditMode);
@@ -76,23 +78,46 @@ const ProductFormPage = () => {
 
     // --- Fetch data kalau edit mode ---
     useEffect(() => {
-        if (!isEditMode) return;
-        const fetchProduct = async () => {
+        // Mapping dari jenis usaha Mitra ke tipe produk yang diizinkan
+        const businessTypeToProductType = {
+            'jual_beli_kendaraan': 'VEHICLE',
+            'jual_beli_sparepart': 'SPAREPART',
+            // Tambahkan mapping lain di sini jika ada
+        };
+
+        const loadInitialData = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const response = await api.get(`/mitra/products/${productId}`, { headers: { Authorization: `Bearer ${token}` } });
-                const product = response.data.data;
+                
+                // 1. Ambil profil mitra untuk mengetahui jenis usahanya
+                const profileResponse = await api.get('/mitra/profile', { headers: { Authorization: `Bearer ${token}` } });
+                const businessType = profileResponse.data?.mitraProfile?.business_type;
+                setMitraBusinessType(businessType);
 
-                setInitialData(product);
-                setFormData({
+                const determinedType = businessTypeToProductType[businessType];
+                if (!determinedType) {
+                    throw new Error("Jenis usaha Anda tidak mendukung penambahan produk ini.");
+                }
+
+                if (isEditMode) {
+                    const productResponse = await api.get(`/mitra/products/${productId}`, { headers: { Authorization: `Bearer ${token}` } });
+                    const product = productResponse.data.data;
+                    
+                    if (product.type !== determinedType) {
+                        throw new Error("Anda tidak berhak mengedit produk dengan jenis ini.");
+                    }
+
+                    setProductType(product.type);
+                    setInitialData(product);
+                    setFormData({
                     title: product.title,
                     description: product.description || "",
                     price: parseFloat(product.price),
                     stock: product.stock,
                     status: product.status,
                 });
-                if (product.vehicleDetail) setVehicleDetail(product.vehicleDetail);
-                if (product.media) {
+                    if (product.vehicleDetail) setVehicleDetail(product.vehicleDetail);
+                    if (product.media) {
                     setMediaItems(product.media.map(m => ({
                         id: m.id,
                         url: `http://localhost:3000${m.url}`,
@@ -100,14 +125,21 @@ const ProductFormPage = () => {
                         file: null,
                     })));
                 }
+
+                } else {
+                    setProductType(determinedType);
+                }
+
             } catch (err) {
-                setError("Gagal memuat data produk.");
+                setError(err.message || "Gagal memuat data.");
             } finally {
                 setLoading(false);
             }
         };
-        fetchProduct();
+
+        loadInitialData();
     }, [isEditMode, productId]);
+    
 
     // --- Handlers ---
     const handleInputChange = e => {
@@ -135,62 +167,77 @@ const ProductFormPage = () => {
 
     // --- Submit Add/Edit ---
     const handleSubmit = async e => {
-        e.preventDefault();
+       e.preventDefault();
         setSaving(true);
         setError("");
 
+        if (!productType) {
+            setError("Tipe produk tidak dapat ditentukan. Pastikan jenis usaha Anda benar.");
+            return;
+        }
+
         const dataToSend = new FormData();
+        
+        // Data umum yang selalu ada
+        dataToSend.append("type", productType);
+        dataToSend.append("title", formData.title);
+        dataToSend.append("price", parseFloat(formData.price));
+        dataToSend.append("stock", parseInt(formData.stock));
+        dataToSend.append("status", formData.status);
+        dataToSend.append("description", formData.description);
+
+        // Data spesifik yang kondisional
+        if (productType === 'VEHICLE') {
+            dataToSend.append("vehicleDetail", JSON.stringify(vehicleDetail));
+        }
+
+        // Logika media
+        const newFiles = mediaItems.filter(item => item.file);
+        newFiles.forEach(item => dataToSend.append("mediaFiles", item.file));
 
         if (isEditMode) {
-            // hanya kirim field yg berubah
-            if (formData.title !== initialData.title) dataToSend.append("title", formData.title);
-            if (formData.description !== initialData.description) dataToSend.append("description", formData.description);
-            if (parseFloat(formData.price) !== parseFloat(initialData.price)) dataToSend.append("price", formData.price);
-            if (parseInt(formData.stock) !== initialData.stock) dataToSend.append("stock", formData.stock);
-            if (formData.status !== initialData.status) dataToSend.append("status", formData.status);
-            if (JSON.stringify(vehicleDetail) !== JSON.stringify(initialData.vehicleDetail)) {
-                dataToSend.append("vehicleDetail", JSON.stringify(vehicleDetail));
-            }
+            // Untuk mode edit, kirim juga media lama dan urutannya
+            const existingUrls = mediaItems.filter(item => !item.file).map(item => item.originalUrl);
+            dataToSend.append("existingMediaUrls", JSON.stringify(existingUrls));
+            
+            let newFileCounter = 0;
+            const mediaOrder = mediaItems.map(item => {
+                if (item.file) return `NEW_FILE_${newFileCounter++}`;
+                return item.originalUrl;
+            });
+            dataToSend.append("mediaOrder", JSON.stringify(mediaOrder));
+        }
 
-            const newFiles = mediaItems.filter(i => i.file);
-            const existing = mediaItems.filter(i => !i.file).map(i => i.originalUrl);
-            dataToSend.append("existingMediaUrls", JSON.stringify(existing));
-            newFiles.forEach(i => dataToSend.append("mediaFiles", i.file));
-
-            try {
-                const token = localStorage.getItem("token");
-                await api.put(`/mitra/products/${productId}`, dataToSend, { headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" } });
+        try {
+            const token = localStorage.getItem("token");
+            let response;
+            if (isEditMode) {
+                // Panggil API PUT untuk update
+                response = await api.put(`/mitra/products/${productId}`, dataToSend, { headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" } });
                 alert("Produk berhasil diperbarui!");
-                navigate("/mitra/store");
-            } catch (err) {
-                setError(err.response?.data?.message || "Gagal update produk.");
-            } finally {
-                setSaving(false);
-            }
-        } else {
-            // mode tambah
-            dataToSend.append("title", formData.title);
-            dataToSend.append("price", parseFloat(formData.price));
-            dataToSend.append("stock", parseInt(formData.stock));
-            dataToSend.append("status", formData.status);
-            dataToSend.append("description", formData.description);
-            dataToSend.append("vehicleDetail", JSON.stringify(vehicleDetail));
-            mediaItems.forEach(f => f.file && dataToSend.append("mediaFiles", f.file));
-
-            try {
-                const token = localStorage.getItem("token");
-                await api.post("/mitra/products", dataToSend, { headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" } });
+            } else {
+                // Panggil API POST untuk create
+                response = await api.post("/mitra/products", dataToSend, { headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" } });
                 alert("Produk berhasil dibuat!");
-                navigate("/mitra/store");
-            } catch (err) {
-                setError(err.response?.data?.message || "Gagal membuat produk.");
-            } finally {
-                setSaving(false);
             }
+            navigate("/mitra/store");
+        } catch (err) {
+            setError(err.response?.data?.message || `Gagal ${isEditMode ? 'memperbarui' : 'membuat'} produk.`);
+        } finally {
+            setSaving(false);
         }
     };
 
     if (loading) return <div className="flex items-center justify-center min-h-screen">Memuat data produk...</div>;
+
+    const pageTitle = isEditMode 
+        ? "Edit Produk" 
+        : `Tambah ${productType === 'VEHICLE' ? 'Kendaraan' : 'Sparepart'} Baru`;
+    
+    const pageDescription = isEditMode 
+        ? "Perbarui detail produk Anda."
+        : `Isi detail ${productType === 'VEHICLE' ? 'kendaraan' : 'sparepart'} yang ingin Anda jual.`;
+
 
     return (
         <div className="bg-slate-100 min-h-screen">
@@ -200,14 +247,12 @@ const ProductFormPage = () => {
                         <BackIcon />
                         <span className="ml-1">Kembali ke Toko Saya</span>
                     </button>
-                    <h1 className="text-3xl md:text-4xl font-bold text-slate-800">
-                        {isEditMode ? "Edit Produk" : "Tambah Produk Baru"}
-                    </h1>
-                    <p className="text-slate-500 mt-1">
-                        {isEditMode ? "Perbarui detail produk Anda." : "Isi detail produk yang ingin Anda jual."}
-                    </p>
+                    <h1 className="text-3xl md:text-4xl font-bold text-slate-800">{pageTitle}</h1>
+                    <p className="text-slate-500 mt-1">{pageDescription}</p>
                 </header>
-
+                {error ? (
+                    <p className="text-red-500 bg-red-100 p-4 rounded-lg text-center">{error}</p>
+                ) : (
                 <form onSubmit={handleSubmit} className="space-y-8">
                     {/* Info Umum */}
                     <div className="bg-white p-6 rounded-2xl shadow-lg">
@@ -217,14 +262,17 @@ const ProductFormPage = () => {
                             <input type="number" name="price" value={formData.price} onChange={handleInputChange} placeholder="Harga" className="w-full border p-2 rounded" />
                             <input type="number" name="stock" value={formData.stock} onChange={handleInputChange} placeholder="Stok" className="w-full border p-2 rounded" />
                             <textarea name="description" value={formData.description} onChange={handleInputChange} placeholder="Deskripsi" className="w-full border p-2 rounded" />
+                            
                         </div>
                     </div>
 
                     {/* Detail Kendaraan */}
-                    <div className="bg-white p-6 rounded-2xl shadow-lg">
-                        <h2 className="text-xl font-semibold border-b pb-4 mb-6">Detail Kendaraan</h2>
-                        <VehicleForm vehicleDetail={vehicleDetail} handleDetailChange={handleDetailChange} />
-                    </div>
+                   {productType === 'VEHICLE' && (
+                        <div className="bg-white p-6 rounded-2xl shadow-lg">
+                            <h2 className="text-xl font-semibold border-b pb-4 mb-6">Detail Kendaraan</h2>
+                            <VehicleForm vehicleDetail={vehicleDetail} handleDetailChange={handleDetailChange} />
+                        </div>
+                    )}
 
                     {/* Galeri Foto */}
                     <div className="bg-white p-6 rounded-2xl shadow-lg">
@@ -252,6 +300,7 @@ const ProductFormPage = () => {
                         </button>
                     </div>
                 </form>
+                )}
             </div>
         </div>
     );

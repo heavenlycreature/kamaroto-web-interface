@@ -233,7 +233,7 @@ const TransactionHistoryTab = () => {
 };
 
 
-const ItemCard = ({ item }) => {
+const ItemCard = ({ item, onDelete }) => {
     const navigate = useNavigate();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -299,7 +299,9 @@ const ItemCard = ({ item }) => {
                 >
                     Edit
                 </button>
-                <button className="px-4 py-1.5 text-sm font-semibold text-red-600 bg-red-100 rounded-md hover:bg-red-200">Hapus</button>
+                <button
+                onClick={() => onDelete(item.id)}  
+                className="px-4 py-1.5 text-sm font-semibold text-red-600 bg-red-100 rounded-md hover:bg-red-200">Hapus</button>
             </div>
         </div>
     );
@@ -329,6 +331,35 @@ const StoreItemsTab = ({ businessType }) => {
         };
         fetchProducts();
     }, []);
+    
+    const handleDeleteProduct = async (productId) => {
+        // 1. Minta konfirmasi dari pengguna (PENTING untuk UX)
+        if (!window.confirm("Apakah Anda yakin ingin menghapus produk ini? Tindakan ini tidak dapat dibatalkan.")) {
+            return; // Batalkan jika pengguna menekan "Cancel"
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            // 2. Panggil endpoint API untuk menghapus
+            await api.delete(`/mitra/products/${productId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            // 3. Jika berhasil, perbarui state products di frontend
+            // Ini akan membuat item langsung hilang dari UI tanpa refresh
+            setProducts(currentProducts => 
+                currentProducts.filter(product => product.id !== productId)
+            );
+
+            // Beri notifikasi sukses (opsional)
+            alert('Produk berhasil dihapus.');
+
+        } catch (err) {
+            console.error("Error saat menghapus produk:", err);
+            // Tampilkan error ke pengguna
+            setError('Gagal menghapus produk. Silakan coba lagi.');
+        }
+    };
 
     const getAddItemButtonText = () => {
         switch (businessType) {
@@ -353,7 +384,7 @@ const StoreItemsTab = ({ businessType }) => {
                     <p className="text-center py-10 text-red-500">{error}</p>
                 ) : products.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {products.map(item => <ItemCard key={item.id} item={item} />)}
+                        {products.map(item => <ItemCard key={item.id} item={item} onDelete={handleDeleteProduct} />)}
                     </div>
                 ) : (
                     <p className="text-center py-10 text-slate-500">Belum ada barang.</p>
